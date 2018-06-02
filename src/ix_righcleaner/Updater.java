@@ -23,7 +23,6 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import javafx.scene.control.Tab;
 import static org.apache.commons.collections4.ListUtils.partition;
 
 /**

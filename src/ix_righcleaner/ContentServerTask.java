@@ -147,7 +147,7 @@ public abstract class ContentServerTask extends Thread{
         long startTime = System.currentTimeMillis();
         try {
             doWork();
-        }catch(InterruptedException e) {
+        }catch(Exception e) {
             logger.error(e.getMessage());
         } finally {
             timer.cancel();

@@ -35,7 +35,7 @@ import javax.xml.soap.SOAPHeaderElement;
  */
 public abstract class ContentServerTask extends Thread{
     private static final OTAuthentication OT_AUTH = new OTAuthentication();
-    private final Logger logger;
+    public final Logger logger;
     private final Timer timer;
     private final String user, password;
     private int processedItems = 0;

@@ -44,7 +44,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField;
+    private TextField folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
@@ -85,12 +85,18 @@ public class IX_RighCleaner extends Application {
         if(itemField.getText() == null || itemField.getText().isEmpty()) {
             return false;
         }
+        if(itemField.getText().equals("2000")){Alert alert = new Alert(AlertType.ERROR); alert.setTitle("ARE YOU MAD?!"); alert.showAndWait(); return false;}
         return !(folderField.getText() == null ||folderField.getText().isEmpty());
     }
     
     private boolean checkMiddleTab() {
         
         return !(folderPermField.getText() == null || folderPermField.getText().isEmpty());
+    }
+    
+    private boolean checkCategoryTab(){
+        if(catVersionField.getText() == null || catVersionField.getText().isEmpty()) return false;
+        return !(catField.getText() == null || catField.getText().isEmpty());
     }
     
     public boolean checkRightTab() {
@@ -167,6 +173,13 @@ public class IX_RighCleaner extends Application {
                         RightVererber vererber_1 = new RightVererber(logger, userField.getText(), passField.getText(), folderIds, exportField.isSelected());
                         tKeeper.addNewTask(vererber_1);
                         break;
+                    case "Upgrade categorywith id and version":
+                        if(!checkCategoryTab()){
+                            return;
+                        }
+                        CategoryUpdater catupdater_1 = new CategoryUpdater(logger, userField.getText(), passField.getText(), Long.valueOf(catField.getText()), Long.valueOf(catVersionField.getText()));
+                        tKeeper.addNewTask(catupdater_1);
+                        break;
                     default:
                         logger.warn("Something went wrong");
                 }
@@ -177,6 +190,8 @@ public class IX_RighCleaner extends Application {
                 partitionField.clear();
                 dataIdField.clear();
                 folderPermField.clear();
+                catVersionField.clear();
+                catField.clear();
             }
         });
         Lorem  lorem  = new Lorem();
@@ -190,6 +205,7 @@ public class IX_RighCleaner extends Application {
                         Level.values()
                 )
         );
+        
         filterLevel.getSelectionModel().select(Level.DEBUG);
         logView.filterLevelProperty().bind(
                 filterLevel.getSelectionModel().selectedItemProperty()
@@ -238,6 +254,11 @@ public class IX_RighCleaner extends Application {
         exportField = new CheckBox();
         exportParentField = new CheckBox();
         folderPermField = new TextField();
+        catVersionField = new TextField();
+        catField = new TextField();
+        
+        catVersionField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
+        catField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         partitionField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         partitionField.setTooltip(new Tooltip("Kill laptop with < 50, stay safe with 200 or more"));
         depthField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -268,10 +289,15 @@ public class IX_RighCleaner extends Application {
         runBox.setPadding(new Insets(5,5,5,5));
         HBox folderPermBox = new HBox(10, new Label("Folder from which perm to inherit"), folderPermField);
         folderPermBox.setPadding(new Insets(5,5,5,5));
+        HBox catBox = new HBox(10, new Label("Category ID"), catField);
+        catBox.setPadding(new Insets(5,5,5,5));
+        HBox catVerBox = new HBox(10, new Label("Category Version"), catVersionField);
+        catVerBox.setPadding(new Insets(5,5,5,5));
         
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
         Container c = new Container("Update with Item ID");
+        Container d = new Container("Upgrade categorywith id and version");
         a.addNode(depthBox);
         a.addNode(itemBox);
         a.addNode(partitionBox);
@@ -279,10 +305,13 @@ public class IX_RighCleaner extends Application {
         b.addNode(folderPermBox);
         c.addNode(dataIdBox);
         c.addNode(exportParentBox);
+        d.addNode(catBox);
+        d.addNode(catVerBox);
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox,runBox);
         tPane.getTabs().add(a);
         tPane.getTabs().add(b);
         tPane.getTabs().add(c);
+        tPane.getTabs().add(d);
         SplitPane leftPane = new SplitPane(tPane,bottom);
         leftPane.setOrientation(Orientation.VERTICAL);
         SplitPane root = new SplitPane(leftPane,layout);

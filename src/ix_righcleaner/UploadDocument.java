@@ -45,6 +45,7 @@ public class UploadDocument extends ContentServerTask{
         Attachment attach = new Attachment();
         try {
             attach.setContents(FileUtils.readFileToByteArray(document));
+            
         } catch (IOException ex) {
             logger.error(ex.getMessage());
         }
@@ -70,5 +71,6 @@ public class UploadDocument extends ContentServerTask{
         AttributeGroup aGroup = new AttributeGroup();
         List<CategoryInheritance> categoryInheritance = docManClient.getCategoryInheritance(81674l);
         docManClient.createDocument(2000l, "Test", "not", false, mData, attach);
+
     }
 }

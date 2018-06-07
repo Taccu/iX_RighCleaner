@@ -8,6 +8,7 @@ package ix_righcleaner;
 import com.opentext.livelink.service.docman.DocumentManagement;
 import com.opentext.livelink.service.docman.GetNodesInContainerOptions;
 import com.opentext.livelink.service.docman.Node;
+import com.opentext.livelink.service.docman.NodeContainerInfo;
 import com.opentext.livelink.service.docman.NodeRight;
 import com.opentext.livelink.service.docman.NodeRights;
 import com.opentext.livelink.service.memberservice.Member;

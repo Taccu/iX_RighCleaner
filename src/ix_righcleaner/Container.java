@@ -27,5 +27,9 @@ public class Container extends Tab{
     
     public void addNode(Node node) {
         vbox.getChildren().add(node);
-    }    
+    }
+    
+    public ContentServerTask getTask(){
+        return task;
+    }
 }

@@ -44,7 +44,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
@@ -116,6 +116,10 @@ public class IX_RighCleaner extends Application {
         }
         return !(dataIdField.getText() == null ||dataIdField.getText().isEmpty());
     }
+    
+    public boolean checkSearchGroupTab(){
+        return !(searchGroupField.getText() == null ||searchGroupField.getText().isEmpty());
+    }
     @Override
     public void start(Stage primaryStage) {
         Button btn = new Button();
@@ -177,8 +181,22 @@ public class IX_RighCleaner extends Application {
                         if(!checkCategoryTab()){
                             return;
                         }
-                        CategoryUpdater catupdater_1 = new CategoryUpdater(logger, userField.getText(), passField.getText(), Long.valueOf(catField.getText()), Long.valueOf(catVersionField.getText()));
+                        CategoryUpdater catupdater_1 = new CategoryUpdater(logger, userField.getText(), passField.getText(), Long.valueOf(catField.getText()), Long.valueOf(catVersionField.getText()), exportField.isSelected());
                         tKeeper.addNewTask(catupdater_1);
+                        break;
+                    case "Search Objects with Group":
+                        if(!checkSearchGroupTab()){
+                            return;
+                        }
+                        split = searchGroupField.getText().split(",");
+                        stringList = new ArrayList<>(Arrays.asList(split)); //new ArrayList is only needed if you absolutely need an ArrayList
+                        //Start update
+                        ArrayList<String> groupIds = new ArrayList<>();
+                        for(String string : stringList ) {
+                            groupIds.add(string);                    
+                        }
+                        SearchObjects sObjects_1 = new SearchObjects(logger, userField.getText(), passField.getText(),groupIds,exportField.isSelected());
+                        tKeeper.addNewTask(sObjects_1);
                         break;
                     default:
                         logger.warn("Something went wrong");
@@ -192,6 +210,7 @@ public class IX_RighCleaner extends Application {
                 folderPermField.clear();
                 catVersionField.clear();
                 catField.clear();
+                searchGroupField.clear();
             }
         });
         Lorem  lorem  = new Lorem();
@@ -256,6 +275,8 @@ public class IX_RighCleaner extends Application {
         folderPermField = new TextField();
         catVersionField = new TextField();
         catField = new TextField();
+        searchGroupField = new TextField();
+        
         
         catVersionField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         catField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -293,11 +314,13 @@ public class IX_RighCleaner extends Application {
         catBox.setPadding(new Insets(5,5,5,5));
         HBox catVerBox = new HBox(10, new Label("Category Version"), catVersionField);
         catVerBox.setPadding(new Insets(5,5,5,5));
-        
+        HBox seGroupBox = new HBox(10, new Label("Gruppensuche"), searchGroupField);
+        seGroupBox.setPadding(new Insets(5,5,5,5));
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
         Container c = new Container("Update with Item ID");
         Container d = new Container("Upgrade categorywith id and version");
+        Container e = new Container("Search Objects with Group");
         a.addNode(depthBox);
         a.addNode(itemBox);
         a.addNode(partitionBox);
@@ -307,11 +330,14 @@ public class IX_RighCleaner extends Application {
         c.addNode(exportParentBox);
         d.addNode(catBox);
         d.addNode(catVerBox);
+        e.addNode(seGroupBox);
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox,runBox);
         tPane.getTabs().add(a);
         tPane.getTabs().add(b);
         tPane.getTabs().add(c);
         tPane.getTabs().add(d);
+        tPane.getTabs().add(e);
+        
         SplitPane leftPane = new SplitPane(tPane,bottom);
         leftPane.setOrientation(Orientation.VERTICAL);
         SplitPane root = new SplitPane(leftPane,layout);

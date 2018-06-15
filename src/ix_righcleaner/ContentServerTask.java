@@ -12,6 +12,8 @@ import com.opentext.livelink.service.docman.DocumentManagement;
 import com.opentext.livelink.service.docman.DocumentManagement_Service;
 import com.opentext.livelink.service.memberservice.MemberService;
 import com.opentext.livelink.service.memberservice.MemberService_Service;
+import com.opentext.livelink.service.searchservices.SearchService;
+import com.opentext.livelink.service.searchservices.SearchService_Service;
 import com.sun.xml.ws.api.message.Headers;
 import com.sun.xml.ws.developer.WSBindingProvider;
 import java.io.IOException;
@@ -39,16 +41,18 @@ public abstract class ContentServerTask extends Thread{
     private final Timer timer;
     private final String user, password;
     private int processedItems = 0;
+    public final boolean export;
     /**
      *
      * @param logger
      * @param user
      * @param password
      */
-    public ContentServerTask(Logger logger, String user, String password){
+    public ContentServerTask(Logger logger, String user, String password, boolean export){
         this.logger = logger;
         this.user = user;
         this.password = password;
+        this.export = export;
         timer = new Timer();
     }
         
@@ -133,6 +137,22 @@ public abstract class ContentServerTask extends Thread{
         }
         return null;
     }
+    
+    public SearchService getSearchClient(){
+        try {
+            SearchService_Service seServService = new SearchService_Service();
+            SearchService seClient = seServService.getBasicHttpBindingSearchService();
+            SOAPHeaderElement header;
+            header = generateSOAPHeaderElement(loginUserWithPassword(user, password));
+            ((WSBindingProvider) seClient).setOutboundHeaders(Headers.create(header));
+            return seClient;
+        }
+        catch(Exception e){
+            handleError(e);
+        }
+        return null;
+    }
+    
     
     @Override
     public void run() {

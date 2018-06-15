@@ -22,16 +22,14 @@ import java.util.List;
  * @author bho
  */
 public class UpdaterDataIds extends ContentServerTask {
-    private final Logger logger;
     private final String  group;
     private final ArrayList<Long> dataIds;
     private final boolean export;
     private final boolean exportParentIds;
     private final List<Long> updatedIds = new ArrayList<>();
     private final List<Long> parentIds = new ArrayList<>();
-    public UpdaterDataIds(Logger logger,String user, String password,String group, ArrayList<Long> dataIds, Boolean export, Boolean exportParentIds) {
-        super(logger, user, password);
-        this.logger = logger;
+    public UpdaterDataIds(Logger logger,String user, String password,String group, ArrayList<Long> dataIds,boolean export, boolean exportParentIds) {
+        super(logger, user, password, export);
         this.group = group;
         this.dataIds = dataIds;
         this.export = export;

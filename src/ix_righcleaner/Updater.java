@@ -37,18 +37,16 @@ public class Updater extends ContentServerTask{
     private final Integer items, depth, partitonSize;
     private final ArrayList<Long> folderIds;
     private ExecutorService executor;
-    private final boolean export;
     private final List<Long> updatedIds = new ArrayList<>();
     
-    public Updater(Logger logger,String user, String password, Integer items, Integer depth,Integer partitonSize,String group, ArrayList<Long> folderIds, Boolean export) {
-        super(logger, user , password);
+    public Updater(Logger logger,String user, String password, Integer items, Integer depth,Integer partitonSize,String group, ArrayList<Long> folderIds, boolean export) {
+        super(logger, user , password, export);
         this.logger = logger;
         this.group = group;
         this.folderIds = folderIds;
         this.items = items;
         this.depth = depth;
         this.partitonSize = partitonSize;
-        this.export = export;
     }
     
     @Override

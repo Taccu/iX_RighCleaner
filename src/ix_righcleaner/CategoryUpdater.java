@@ -17,8 +17,8 @@ public class CategoryUpdater extends ContentServerTask{
     private final Integer batchSize;
     private final Long categoryId,categoryVersion;
     private Integer numItems = 0;
-    public CategoryUpdater(Logger logger, String user, String password, Long categoryId, Long categoryVersion){
-        super(logger, user, password);
+    public CategoryUpdater(Logger logger, String user, String password, Long categoryId, Long categoryVersion, boolean export){
+        super(logger, user, password, export);
         this.batchSize = 2000000;
         this.categoryId = categoryId;
         this.categoryVersion = categoryVersion;

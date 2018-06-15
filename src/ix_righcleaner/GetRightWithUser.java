@@ -20,8 +20,8 @@ import java.util.List;
 public class GetRightWithUser extends ContentServerTask{
     private Logger logger;
     private Long userId, baseFolderId;
-    public GetRightWithUser(Logger logger, String user, String password, Long userId, Long baseFolderId){
-        super(logger,user,password);
+    public GetRightWithUser(Logger logger, String user, String password, Long userId, Long baseFolderId, boolean export){
+        super(logger,user,password, export);
         this.logger = logger;
         this.userId = userId;
         this.baseFolderId = baseFolderId;

@@ -26,14 +26,12 @@ import java.util.List;
 public class RightVererber extends ContentServerTask{
     private final Logger logger;
     private final List<Long> folderIds;
-    private final boolean export;
     private final List<Long> updatedIds = new ArrayList<>();
     private int numItems = 0;
-    public RightVererber(Logger logger, String user, String password,List<Long> folderIds, Boolean export) {
-        super(logger, user, password);
+    public RightVererber(Logger logger, String user, String password,List<Long> folderIds, boolean export) {
+        super(logger, user, password, export);
         this.logger = logger;
         this.folderIds = folderIds;
-        this.export = export;
     }
 
     @Override

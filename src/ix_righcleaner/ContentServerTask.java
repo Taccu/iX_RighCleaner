@@ -62,6 +62,7 @@ public abstract class ContentServerTask extends Thread{
     
     protected void handleError(Exception e) {
         logger.error(e.getMessage());
+        e.printStackTrace();
         logger.debug("Interrupting thread...");
         Thread.currentThread().interrupt();
     }
@@ -141,6 +142,7 @@ public abstract class ContentServerTask extends Thread{
     public SearchService getSearchClient(){
         try {
             SearchService_Service seServService = new SearchService_Service();
+            
             SearchService seClient = seServService.getBasicHttpBindingSearchService();
             SOAPHeaderElement header;
             header = generateSOAPHeaderElement(loginUserWithPassword(user, password));

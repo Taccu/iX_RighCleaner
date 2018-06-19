@@ -13,6 +13,13 @@ import com.opentext.livelink.service.docman.NodeRights;
 import com.opentext.livelink.service.memberservice.Group;
 import com.opentext.livelink.service.memberservice.MemberRight;
 import com.opentext.livelink.service.memberservice.MemberService;
+import com.opentext.livelink.service.searchservices.DataBagType;
+import com.opentext.livelink.service.searchservices.SGraph;
+import com.opentext.livelink.service.searchservices.SNode;
+import com.opentext.livelink.service.searchservices.SResultPage;
+import com.opentext.livelink.service.searchservices.SearchService;
+import com.opentext.livelink.service.searchservices.SingleSearchRequest;
+import com.opentext.livelink.service.searchservices.SingleSearchResponse;
 import static java.lang.Integer.MAX_VALUE;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,9 +43,11 @@ public class SearchObjects extends ContentServerTask{
     @Override
     public void doWork() {
         logger.debug("Dowork");
+        ArrayList<Long> groupIds = new ArrayList<>();
         DocumentManagement docManClient = getDocManClient();
         MemberService msClient = getMsClient();
-        ArrayList<Long> groupIds = new ArrayList<>();
+        SearchService sService = getSearchClient();
+         System.out.println("Groups size:" + groups.size());
         for(String string :  groups) {
             Group groupByName = msClient.getGroupByName(string);
             logger.debug(string + ": " + groupByName.getID());
@@ -47,20 +56,52 @@ public class SearchObjects extends ContentServerTask{
             for(MemberRight right : listRightsByID) {
                 logger.debug("Right: " + right.getID() + "|" + right.getName());
             }
-            
         }
-        GetNodesInContainerOptions options = new GetNodesInContainerOptions();
-        options.setMaxDepth(40);
-        options.setMaxResults(MAX_VALUE);
-        List<Node> nodesInContainer = docManClient.getNodesInContainer(2000l, options);
-        for(Node node : nodesInContainer) {
+        SingleSearchRequest query = new SingleSearchRequest();
+        
+        List<String> dataCollections = sService.getDataCollections();
+        
+        String whereClause = "*";
+        query.setDataCollectionSpec("'"+dataCollections.get(0)+"'");
+        query.setQueryLanguage("Livelink Search API V1.1");
+        query.setFirstResultToRetrieve(1);
+        query.setNumResultsToRetrieve(10000);
+        query.setResultSetSpec("where1="+whereClause);
+        query.setResultOrderSpec("sortByRegion=OTCreatedBy");
+        query.getResultTransformationSpec().add("OTName");
+        query.getResultTransformationSpec().add("OTLocation");
+        
+        SingleSearchResponse results = sService.search(query, "");
+        
+        SResultPage srp= results.getResults();
+        List<SGraph> sra = results.getResultAnalysis();
+        
+        ArrayList<Long> nodes = new ArrayList<>();
+        
+        if(srp != null) {
+            List<SGraph> items = srp.getItem();
+            List<DataBagType> types = srp.getType();
+            
+            if(items != null && types != null && items.size() > 0) {
+                for(SGraph item : items) {
+                    String extractId = extractId(item.getID());
+                    System.out.println(extractId);
+                    nodes.add(Long.valueOf(extractId));
+                }
+            }
+        }
+        List<Node> nodes1 = docManClient.getNodes(nodes);
+        
+        for(Node node : nodes1) {
             NodeRights nodeRights = docManClient.getNodeRights(node.getID());
-            List<NodeRight> aclRights = nodeRights.getACLRights();
-            for(NodeRight right : aclRights) {
+            for(NodeRight right : nodeRights.getACLRights()) {
                 if(groupIds.contains(right.getRightID())) {
                     logger.debug("Parent: " + docManClient.getNode(node.getParentID()).getName() + "|"+node.getName() + " contains right for group ");
                 }
             }
         }
+    }
+    private String extractId(String string){
+        return string.replaceAll("(.*)DataId=", "").replaceAll("&(.*)", "");
     }
 }

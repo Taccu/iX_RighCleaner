@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -36,12 +37,14 @@ import javax.xml.soap.SOAPHeaderElement;
  * @author Taccu
  */
 public abstract class ContentServerTask extends Thread{
+    public static final String SEARCH_API = "Livelink Search API V1.1";
     private static final OTAuthentication OT_AUTH = new OTAuthentication();
     public final Logger logger;
     private final Timer timer;
     private final String user, password;
     private int processedItems = 0;
     public final boolean export;
+    public final ArrayList<Long> exportIds = new ArrayList<>();
     /**
      *
      * @param logger
@@ -169,6 +172,14 @@ public abstract class ContentServerTask extends Thread{
         long startTime = System.currentTimeMillis();
         try {
             doWork();
+            if(export && exportIds.size() > 0) {
+                try{
+                    writeArrayToPath(exportIds,Paths.get(getNameOfTask()+".txt"));
+                } catch(IOException ex) {
+                    logger.error("Couldn't write " + getNameOfTask() + ".txt" );
+                    logger.error(ex.getMessage());
+                }
+            }
         }catch(Exception e) {
             logger.error(e.getMessage());
         } finally {

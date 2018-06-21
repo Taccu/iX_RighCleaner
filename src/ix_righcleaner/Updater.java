@@ -8,14 +8,10 @@ package ix_righcleaner;
 import com.opentext.livelink.service.docman.DocumentManagement;
 import com.opentext.livelink.service.docman.GetNodesInContainerOptions;
 import com.opentext.livelink.service.docman.Node;
-import com.opentext.livelink.service.docman.NodeContainerInfo;
 import com.opentext.livelink.service.docman.NodeRight;
 import com.opentext.livelink.service.docman.NodeRights;
 import com.opentext.livelink.service.memberservice.Member;
 import com.opentext.livelink.service.memberservice.MemberService;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -37,7 +33,6 @@ public class Updater extends ContentServerTask{
     private final Integer items, depth, partitonSize;
     private final ArrayList<Long> folderIds;
     private ExecutorService executor;
-    private final List<Long> updatedIds = new ArrayList<>();
     
     public Updater(Logger logger,String user, String password, Integer items, Integer depth,Integer partitonSize,String group, ArrayList<Long> folderIds, boolean export) {
         super(logger, user , password, export);
@@ -85,7 +80,7 @@ public class Updater extends ContentServerTask{
             while(received < partitions.size() && !erros) {
                 try {
                     Future<List<Long>> resultFuture = completionService.take();
-                    updatedIds.addAll(resultFuture.get());
+                    exportIds.addAll(resultFuture.get());
                     received ++;
                 } catch(Exception e) {
                     logger.error(e.getMessage());
@@ -96,16 +91,7 @@ public class Updater extends ContentServerTask{
             }
         }
         executor.shutdown();
-        setProcessedItems(updatedIds.size());
-        if(export) {
-            Path out = Paths.get(getNameOfTask()+".txt");
-            try {
-                writeArrayToPath(updatedIds, out);
-            } catch (IOException ex) {
-                logger.error("Couldn't write " + getNameOfTask() + ".txt" );
-                logger.error(ex.getMessage());
-            }
-        }
+        setProcessedItems(exportIds.size());
     }
     class UpdateNodes implements Callable<List<Long>>{
         private final List<Node> partition;
@@ -134,7 +120,7 @@ public class Updater extends ContentServerTask{
                 logger.debug("Total right count for " +node.getName() +"(id:" + node.getID() + "):"+ aclRights.size());
                 if(aclRights.size() > 0) {
                     logger.debug("Processing " +node.getName() +"(id:" + node.getID() + ")");
-                    for(NodeRight right : aclRights) {
+                    aclRights.forEach((right) -> {
                         Member rightOwner = msClient.getMemberById(right.getRightID());
                         logger.debug("Processing item " + node.getName() + "(id:" + node.getID() + ")" + ": current right entry:" + rightOwner.getName() + "(id:" +right.getRightID() + ")");
                         if(group.isEmpty()) {
@@ -149,7 +135,7 @@ public class Updater extends ContentServerTask{
                                 processedIds.add(node.getID());
                             }   
                         }
-                    }
+                    });
                 } else {
                     logger.error(node.getID() + " has no rights.");
                 }    

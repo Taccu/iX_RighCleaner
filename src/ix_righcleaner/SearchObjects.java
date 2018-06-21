@@ -31,8 +31,8 @@ import java.util.List;
  */
 public class SearchObjects extends ContentServerTask{
     private final ArrayList<String> groups;
-    private final ArrayList<Long> foundIds = new ArrayList<>();
     private final String regionName, value;
+    
     public SearchObjects(Logger logger, String user, String password, ArrayList<String> groups,String regionName, String value, boolean export) {
         super(logger, user ,password, export);
         this.groups = groups;
@@ -52,7 +52,6 @@ public class SearchObjects extends ContentServerTask{
         DocumentManagement docManClient = getDocManClient();
         MemberService msClient = getMsClient();
         SearchService sService = getSearchClient();
-         System.out.println("Groups size:" + groups.size());
         for(String string :  groups) {
             Group groupByName = msClient.getGroupByName(string);
             logger.debug(string + ": " + groupByName.getID());
@@ -63,12 +62,10 @@ public class SearchObjects extends ContentServerTask{
             }
         }
         SingleSearchRequest query = new SingleSearchRequest();
-        
         List<String> dataCollections = sService.getDataCollections();
         
-        String whereClause = "*";
         query.setDataCollectionSpec("'"+dataCollections.get(0)+"'");
-        query.setQueryLanguage("Livelink Search API V1.1");
+        query.setQueryLanguage(SEARCH_API);
         query.setFirstResultToRetrieve(1);
         query.setNumResultsToRetrieve(10000);
         query.setResultSetSpec("where1=(\"" + regionName + "\":\"" + value + "\")");
@@ -90,7 +87,6 @@ public class SearchObjects extends ContentServerTask{
             if(items != null && types != null && items.size() > 0) {
                 for(SGraph item : items) {
                     String extractId = extractId(item.getID());
-                    System.out.println(extractId);
                     nodes.add(Long.valueOf(extractId));
                 }
             }
@@ -101,18 +97,9 @@ public class SearchObjects extends ContentServerTask{
             NodeRights nodeRights = docManClient.getNodeRights(node.getID());
             for(NodeRight right : nodeRights.getACLRights()) {
                 if(groupIds.contains(right.getRightID())) {
-                    foundIds.add(node.getID());
+                    exportIds.add(node.getID());
                     logger.debug("Parent: " + docManClient.getNode(node.getParentID()).getName() + "|"+node.getName() + " contains right for group ");
                 }
-            }
-        }
-        if(export) {
-            Path out = Paths.get(getNameOfTask()+".txt");
-            try {
-                writeArrayToPath(foundIds, out);
-            } catch (IOException ex) {
-                logger.error("Couldn't write " + getNameOfTask() + ".txt" );
-                logger.error(ex.getMessage());
             }
         }
     }

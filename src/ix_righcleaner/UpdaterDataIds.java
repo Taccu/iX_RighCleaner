@@ -24,15 +24,12 @@ import java.util.List;
 public class UpdaterDataIds extends ContentServerTask {
     private final String  group;
     private final ArrayList<Long> dataIds;
-    private final boolean export;
     private final boolean exportParentIds;
-    private final List<Long> updatedIds = new ArrayList<>();
     private final List<Long> parentIds = new ArrayList<>();
     public UpdaterDataIds(Logger logger,String user, String password,String group, ArrayList<Long> dataIds,boolean export, boolean exportParentIds) {
         super(logger, user, password, export);
         this.group = group;
         this.dataIds = dataIds;
-        this.export = export;
         this.exportParentIds = exportParentIds;
     }
 
@@ -60,29 +57,20 @@ public class UpdaterDataIds extends ContentServerTask {
                 if(rightOwner.getName().equals(group) || group.isEmpty()) {
                     logger.info("Removing "+ rightOwner.getName() +"(id:" + right.getRightID() + ")" + " from " +node.getName() +"(id:" + node.getID() + ")");
                     docManClient.removeNodeRight(node.getID(), right);
-                    updatedIds.add(node.getID());
+                    exportIds.add(node.getID());
                     parentIds.add(node.getParentID());
                 }
             }
         }
-        setProcessedItems(updatedIds.size());
-        if(export) {
-                Path out = Paths.get(getNameOfTask()+".txt");
-                try {
-                    writeArrayToPath(updatedIds, out);
-                } catch (IOException ex) {
-                    logger.error("Couldn't write " + getNameOfTask() + ".txt" );
-                    logger.error(ex.getMessage());
-                }
+        setProcessedItems(exportIds.size());
+        if(exportParentIds) {
+            Path out = Paths.get(getNameOfTask() + "_parents.txt");
+            try {
+                writeArrayToPath(parentIds, out);
+            } catch (IOException ex) {
+                logger.error("Couldn't write " + getNameOfTask() + "_parents.txt");
+                logger.error(ex.getMessage());
             }
-            if(exportParentIds) {
-                Path out = Paths.get(getNameOfTask() + "_parents.txt");
-                try {
-                    writeArrayToPath(parentIds, out);
-                } catch (IOException ex) {
-                    logger.error("Couldn't write " + getNameOfTask() + "_parents.txt");
-                    logger.error(ex.getMessage());
-                }
-            }
+        }
     }
 }

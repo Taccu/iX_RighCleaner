@@ -13,10 +13,6 @@ import com.opentext.livelink.service.docman.NodeRightUpdateInfo;
 import com.opentext.livelink.service.docman.NodeRights;
 import com.opentext.livelink.service.docman.RightOperation;
 import com.opentext.livelink.service.docman.RightPropagation;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,7 +22,6 @@ import java.util.List;
 public class RightVererber extends ContentServerTask{
     private final Logger logger;
     private final List<Long> folderIds;
-    private final List<Long> updatedIds = new ArrayList<>();
     private int numItems = 0;
     public RightVererber(Logger logger, String user, String password,List<Long> folderIds, boolean export) {
         super(logger, user, password, export);
@@ -57,21 +52,13 @@ public class RightVererber extends ContentServerTask{
                 NodeRightUpdateInfo chunkIt = chunkIt(docManClient.updateNodeRights(updateNodeRightsContext));
                 numItems += chunkIt.getNodeCount();
                 logger.info("Sucessfully applied rights to " + numItems + " child objects of folder " + node.getName() + "(id:" + node.getID() + ")");
-                updatedIds.add(node.getID());
+                exportIds.add(node.getID());
             } else {
                 logger.warn(node.getName() + "(id:" + node.getID() + ") is not a folder");
             }
         }
-        setProcessedItems(updatedIds.size());
-        if(export) {
-            Path out = Paths.get(getNameOfTask()+".txt");
-            try {
-                writeArrayToPath(updatedIds, out);
-            } catch (IOException ex) {
-                logger.error("Couldn't write " + getNameOfTask() + ".txt" );
-                logger.error(ex.getMessage());
-            }
-        }
+        setProcessedItems(exportIds.size());
+        
     }
     
     private NodeRightUpdateInfo chunkIt(NodeRightUpdateInfo nrui){

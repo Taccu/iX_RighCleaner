@@ -44,7 +44,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
@@ -118,6 +118,12 @@ public class IX_RighCleaner extends Application {
     }
     
     public boolean checkSearchGroupTab(){
+        if(regionNameField.getText() == null || regionNameField.getText().isEmpty()) {
+            return false;
+        }
+        if(valueField.getText() == null || valueField.getText().isEmpty()) {
+            return false;
+        }
         return !(searchGroupField.getText() == null ||searchGroupField.getText().isEmpty());
     }
     @Override
@@ -195,7 +201,7 @@ public class IX_RighCleaner extends Application {
                         for(String string : stringList ) {
                             groupIds.add(string);                    
                         }
-                        SearchObjects sObjects_1 = new SearchObjects(logger, userField.getText(), passField.getText(),groupIds,exportField.isSelected());
+                        SearchObjects sObjects_1 = new SearchObjects(logger, userField.getText(), passField.getText(),groupIds, regionNameField.getText(), valueField.getText(),exportField.isSelected());
                         tKeeper.addNewTask(sObjects_1);
                         break;
                     default:
@@ -211,6 +217,8 @@ public class IX_RighCleaner extends Application {
                 catVersionField.clear();
                 catField.clear();
                 searchGroupField.clear();
+                regionNameField.clear();
+                valueField.clear();
             }
         });
         Lorem  lorem  = new Lorem();
@@ -276,7 +284,8 @@ public class IX_RighCleaner extends Application {
         catVersionField = new TextField();
         catField = new TextField();
         searchGroupField = new TextField();
-        
+        regionNameField = new TextField();
+        valueField = new TextField();
         
         catVersionField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         catField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -316,6 +325,12 @@ public class IX_RighCleaner extends Application {
         catVerBox.setPadding(new Insets(5,5,5,5));
         HBox seGroupBox = new HBox(10, new Label("Gruppensuche"), searchGroupField);
         seGroupBox.setPadding(new Insets(5,5,5,5));
+        
+        HBox seRegionBox = new HBox(10, new Label("Region Bsp: Attr_82554_2"), regionNameField);
+        seRegionBox.setPadding(new Insets(5,5,5,5));
+        
+        HBox seValueBox = new HBox(10, new Label("Kategorie Wert"), valueField);
+        seValueBox.setPadding(new Insets(5,5,5,5));
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
         Container c = new Container("Update with Item ID");
@@ -331,6 +346,8 @@ public class IX_RighCleaner extends Application {
         d.addNode(catBox);
         d.addNode(catVerBox);
         e.addNode(seGroupBox);
+        e.addNode(seRegionBox);
+        e.addNode(seValueBox);//("Attr_82554_2":"Test")
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox,runBox);
         tPane.getTabs().add(a);
         tPane.getTabs().add(b);

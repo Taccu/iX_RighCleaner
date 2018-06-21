@@ -6,7 +6,6 @@
 package ix_righcleaner;
 
 import com.opentext.livelink.service.docman.DocumentManagement;
-import com.opentext.livelink.service.docman.GetNodesInContainerOptions;
 import com.opentext.livelink.service.docman.Node;
 import com.opentext.livelink.service.docman.NodeRight;
 import com.opentext.livelink.service.docman.NodeRights;
@@ -15,12 +14,14 @@ import com.opentext.livelink.service.memberservice.MemberRight;
 import com.opentext.livelink.service.memberservice.MemberService;
 import com.opentext.livelink.service.searchservices.DataBagType;
 import com.opentext.livelink.service.searchservices.SGraph;
-import com.opentext.livelink.service.searchservices.SNode;
 import com.opentext.livelink.service.searchservices.SResultPage;
 import com.opentext.livelink.service.searchservices.SearchService;
 import com.opentext.livelink.service.searchservices.SingleSearchRequest;
 import com.opentext.livelink.service.searchservices.SingleSearchResponse;
-import static java.lang.Integer.MAX_VALUE;
+import static ix_righcleaner.ContentServerTask.writeArrayToPath;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,9 +31,13 @@ import java.util.List;
  */
 public class SearchObjects extends ContentServerTask{
     private final ArrayList<String> groups;
-    public SearchObjects(Logger logger, String user, String password, ArrayList<String> groups, boolean export) {
+    private final ArrayList<Long> foundIds = new ArrayList<>();
+    private final String regionName, value;
+    public SearchObjects(Logger logger, String user, String password, ArrayList<String> groups,String regionName, String value, boolean export) {
         super(logger, user ,password, export);
         this.groups = groups;
+        this.regionName = regionName;
+        this.value = value;
     }
     
     @Override
@@ -66,7 +71,7 @@ public class SearchObjects extends ContentServerTask{
         query.setQueryLanguage("Livelink Search API V1.1");
         query.setFirstResultToRetrieve(1);
         query.setNumResultsToRetrieve(10000);
-        query.setResultSetSpec("where1="+whereClause);
+        query.setResultSetSpec("where1=(\"" + regionName + "\":\"" + value + "\")");
         query.setResultOrderSpec("sortByRegion=OTCreatedBy");
         query.getResultTransformationSpec().add("OTName");
         query.getResultTransformationSpec().add("OTLocation");
@@ -96,8 +101,18 @@ public class SearchObjects extends ContentServerTask{
             NodeRights nodeRights = docManClient.getNodeRights(node.getID());
             for(NodeRight right : nodeRights.getACLRights()) {
                 if(groupIds.contains(right.getRightID())) {
+                    foundIds.add(node.getID());
                     logger.debug("Parent: " + docManClient.getNode(node.getParentID()).getName() + "|"+node.getName() + " contains right for group ");
                 }
+            }
+        }
+        if(export) {
+            Path out = Paths.get(getNameOfTask()+".txt");
+            try {
+                writeArrayToPath(foundIds, out);
+            } catch (IOException ex) {
+                logger.error("Couldn't write " + getNameOfTask() + ".txt" );
+                logger.error(ex.getMessage());
             }
         }
     }

@@ -44,11 +44,11 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
-    private CheckBox exportField, exportParentField;
+    private CheckBox exportField, exportParentField, appl_inherit;
     private final TabPane tPane = new TabPane();
     private TaskKeeper tKeeper;
     private boolean checkGlobalFields() {
@@ -59,6 +59,16 @@ public class IX_RighCleaner extends Application {
             return false;
         }
         return groupField.getText() != null;
+    }
+    
+    private boolean checkApplierTab(){
+        if(appl_nodeToCopyField.getText() == null ||appl_nodeToCopyField.getText().isEmpty()) {
+            return false;
+        }
+        if(appl_inherit == null) {
+            return false;
+        }
+        return (appl_folderIdsField.getText() != null || appl_folderIdsField.getText().isEmpty());
     }
     
     private boolean checkLeftTab() {
@@ -204,8 +214,22 @@ public class IX_RighCleaner extends Application {
                         SearchObjects sObjects_1 = new SearchObjects(logger, userField.getText(), passField.getText(),groupIds, regionNameField.getText(), valueField.getText(),exportField.isSelected());
                         tKeeper.addNewTask(sObjects_1);
                         break;
+                    case "Apply Permissions to Folder":
+                        if(!checkApplierTab()) {
+                            return;
+                        }
+                        split = appl_folderIdsField.getText().split(",");
+                        stringList = new ArrayList<>(Arrays.asList(split)); //new ArrayList is only needed if you absolutely need an ArrayList
+                        //Start update
+                        ArrayList<String> apply_folderIds = new ArrayList<>();
+                        for(String string : stringList ) {
+                            apply_folderIds.add(string);                    
+                        }
+                        RightApplier rApplier_1 = new RightApplier(logger, userField.getText(), passField.getText(),apply_folderIds, Long.valueOf(appl_nodeToCopyField.getText()), appl_inherit.isSelected(),exportField.isSelected());
+                        tKeeper.addNewTask(rApplier_1);
+                        break;
                     default:
-                        logger.warn("Something went wrong");
+                        logger.error("Something went wrong");
                 }
                 //Clear input fields
                 folderField.clear();
@@ -219,6 +243,9 @@ public class IX_RighCleaner extends Application {
                 searchGroupField.clear();
                 regionNameField.clear();
                 valueField.clear();
+                appl_nodeToCopyField.clear();
+                appl_folderIdsField.clear();
+                //appl_inherit;
             }
         });
         Lorem  lorem  = new Lorem();
@@ -286,7 +313,11 @@ public class IX_RighCleaner extends Application {
         searchGroupField = new TextField();
         regionNameField = new TextField();
         valueField = new TextField();
+        appl_nodeToCopyField = new TextField();
+        appl_folderIdsField = new TextField();
+        appl_inherit = new CheckBox();
         
+        appl_nodeToCopyField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         catVersionField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         catField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         partitionField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -331,11 +362,21 @@ public class IX_RighCleaner extends Application {
         
         HBox seValueBox = new HBox(10, new Label("Kategorie Wert"), valueField);
         seValueBox.setPadding(new Insets(5,5,5,5));
+        
+        HBox appl_folderIdsBox = new HBox(10, new Label("Folder Ids"), appl_folderIdsField);
+        appl_folderIdsBox.setPadding(new Insets(5,5,5,5));
+        HBox appl_nodeCopyBox  = new HBox(10, new Label("ID wovon kopiert wird"), appl_nodeToCopyField);
+        appl_nodeCopyBox.setPadding(new Insets(5,5,5,5));
+        HBox appl_inheritToChildBox = new HBox(10, new Label("Vererbe gesetzte Rechte auf Subitems"), appl_inherit);
+        appl_inheritToChildBox.setPadding(new Insets(5,5,5,5));
+        
+        
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
         Container c = new Container("Update with Item ID");
         Container d = new Container("Upgrade categorywith id and version");
         Container e = new Container("Search Objects with Group");
+        Container f = new Container("Apply Permissions to Folder");
         a.addNode(depthBox);
         a.addNode(itemBox);
         a.addNode(partitionBox);
@@ -348,12 +389,17 @@ public class IX_RighCleaner extends Application {
         e.addNode(seGroupBox);
         e.addNode(seRegionBox);
         e.addNode(seValueBox);//("Attr_82554_2":"Test")
+        f.addNode(appl_folderIdsBox);
+        f.addNode(appl_nodeCopyBox);
+        f.addNode(appl_inheritToChildBox);
+        
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox,runBox);
         tPane.getTabs().add(a);
         tPane.getTabs().add(b);
         tPane.getTabs().add(c);
         tPane.getTabs().add(d);
         tPane.getTabs().add(e);
+        tPane.getTabs().add(f);
         
         SplitPane leftPane = new SplitPane(tPane,bottom);
         leftPane.setOrientation(Orientation.VERTICAL);

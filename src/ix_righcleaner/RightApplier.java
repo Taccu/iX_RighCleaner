@@ -22,10 +22,10 @@ import java.util.List;
  * @author bho
  */
 public class RightApplier extends ContentServerTask{
-    private final ArrayList<Long> folderIds;
+    private final ArrayList<String> folderIds;
     private final Long nodeToCopyFrom;
     private final boolean inheritToChilds;
-    public RightApplier(Logger logger, String user, String password, ArrayList<Long> folderIds, Long nodeToCopyFrom, boolean inheritToChilds, boolean export) {
+    public RightApplier(Logger logger, String user, String password, ArrayList<String> folderIds, Long nodeToCopyFrom, boolean inheritToChilds, boolean export) {
         super(logger,user, password, export);
         this.folderIds = folderIds;
         this.nodeToCopyFrom = nodeToCopyFrom;
@@ -43,11 +43,11 @@ public class RightApplier extends ContentServerTask{
         NodeRights baseNodeRights = docClient.getNodeRights(nodeToCopyFrom);
         folderIds.forEach(id -> {
             logger.info("Applying Node Permissions from " + nNodeToCopyFrom.getName() + " to Folder ID:"+id);
-            docClient.setNodeRights(id, baseNodeRights);
+            docClient.setNodeRights(Long.valueOf(id), baseNodeRights);
             if(inheritToChilds) {
-                NodeRights nodeRights = docClient.getNodeRights(id);
+                NodeRights nodeRights = docClient.getNodeRights(Long.valueOf(id));
                 List<NodeRight> aclRights = nodeRights.getACLRights();
-                ChunkedOperationContext updateNodeRightsContext = docClient.updateNodeRightsContext(id, RightOperation.ADD_REPLACE, aclRights, RightPropagation.CHILDREN_ONLY);
+                ChunkedOperationContext updateNodeRightsContext = docClient.updateNodeRightsContext(Long.valueOf(id), RightOperation.ADD_REPLACE, aclRights, RightPropagation.CHILDREN_ONLY);
                 NodeRightUpdateInfo chunkIt = chunkIt(docClient.updateNodeRights(updateNodeRightsContext));
             }
         });

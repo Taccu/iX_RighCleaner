@@ -58,7 +58,6 @@ public class RightVererber extends ContentServerTask{
             }
         }
         setProcessedItems(exportIds.size());
-        
     }
     
     private NodeRightUpdateInfo chunkIt(NodeRightUpdateInfo nrui){

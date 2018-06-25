@@ -46,6 +46,7 @@ public class RightApplier extends ContentServerTask{
             docClient.setNodeRights(Long.valueOf(id), baseNodeRights);
             if(inheritToChilds) {
                 NodeRights nodeRights = docClient.getNodeRights(Long.valueOf(id));
+                exportIds.add(Long.valueOf(id));
                 List<NodeRight> aclRights = nodeRights.getACLRights();
                 ChunkedOperationContext updateNodeRightsContext = docClient.updateNodeRightsContext(Long.valueOf(id), RightOperation.ADD_REPLACE, aclRights, RightPropagation.CHILDREN_ONLY);
                 NodeRightUpdateInfo chunkIt = chunkIt(docClient.updateNodeRights(updateNodeRightsContext));

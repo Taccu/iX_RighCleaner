@@ -44,7 +44,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
@@ -59,6 +59,10 @@ public class IX_RighCleaner extends Application {
             return false;
         }
         return groupField.getText() != null;
+    }
+    
+    private boolean checkObjectTemplateTab(){
+        return (obTemp_templateField.getText() != null || obTemp_templateField.getText().isEmpty());
     }
     
     private boolean checkApplierTab(){
@@ -228,6 +232,13 @@ public class IX_RighCleaner extends Application {
                         RightApplier rApplier_1 = new RightApplier(logger, userField.getText(), passField.getText(),apply_folderIds, Long.valueOf(appl_nodeToCopyField.getText()), appl_inherit.isSelected(),exportField.isSelected());
                         tKeeper.addNewTask(rApplier_1);
                         break;
+                    case "Update Objects with Template ID":
+                        if(!checkObjectTemplateTab()){
+                            return;
+                        }
+                        UpdateObjectsWithTemplate utemplate_1 = new UpdateObjectsWithTemplate(logger, userField.getText(), passField.getText(),Long.valueOf(obTemp_templateField.getText()),exportField.isSelected());
+                        tKeeper.addNewTask(utemplate_1);
+                        break;
                     default:
                         logger.error("Something went wrong");
                 }
@@ -245,6 +256,7 @@ public class IX_RighCleaner extends Application {
                 valueField.clear();
                 appl_nodeToCopyField.clear();
                 appl_folderIdsField.clear();
+                obTemp_templateField.clear();
                 //appl_inherit;
             }
         });
@@ -316,7 +328,9 @@ public class IX_RighCleaner extends Application {
         appl_nodeToCopyField = new TextField();
         appl_folderIdsField = new TextField();
         appl_inherit = new CheckBox();
+        obTemp_templateField = new TextField();
         
+        obTemp_templateField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         appl_nodeToCopyField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         catVersionField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         catField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -370,6 +384,8 @@ public class IX_RighCleaner extends Application {
         HBox appl_inheritToChildBox = new HBox(10, new Label("Vererbe gesetzte Rechte auf Subitems"), appl_inherit);
         appl_inheritToChildBox.setPadding(new Insets(5,5,5,5));
         
+        HBox objTemp_templateBox = new HBox(10, new Label("Template ID"), obTemp_templateField);
+        objTemp_templateBox.setPadding(new Insets(5,5,5,5));
         
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
@@ -377,6 +393,7 @@ public class IX_RighCleaner extends Application {
         Container d = new Container("Upgrade categorywith id and version");
         Container e = new Container("Search Objects with Group");
         Container f = new Container("Apply Permissions to Folder");
+        Container g = new Container("Update Objects with Template ID");
         a.addNode(depthBox);
         a.addNode(itemBox);
         a.addNode(partitionBox);
@@ -392,6 +409,7 @@ public class IX_RighCleaner extends Application {
         f.addNode(appl_folderIdsBox);
         f.addNode(appl_nodeCopyBox);
         f.addNode(appl_inheritToChildBox);
+        g.addNode(objTemp_templateBox);
         
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox,runBox);
         tPane.getTabs().add(a);
@@ -400,7 +418,7 @@ public class IX_RighCleaner extends Application {
         tPane.getTabs().add(d);
         tPane.getTabs().add(e);
         tPane.getTabs().add(f);
-        
+        tPane.getTabs().add(g);
         SplitPane leftPane = new SplitPane(tPane,bottom);
         leftPane.setOrientation(Orientation.VERTICAL);
         SplitPane root = new SplitPane(leftPane,layout);

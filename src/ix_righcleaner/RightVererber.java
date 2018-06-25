@@ -43,20 +43,18 @@ public class RightVererber extends ContentServerTask{
         DocumentManagement docManClient = getDocManClient();
         for(Long id : folderIds) {
             Node node = docManClient.getNode(id);
-            if(node.getType().equals("Folder")) {
-                logger.debug("Found folder " + node.getName() + "(id:" + node.getID() + ")");
-                NodeRights nodeRights = docManClient.getNodeRights(id);
-                List<NodeRight> aclRights = nodeRights.getACLRights();
-                logger.debug("Applying rights to childs of folder " + node.getName() + "(id:" + node.getID() + ")...");
-                ChunkedOperationContext updateNodeRightsContext = docManClient.updateNodeRightsContext(id, RightOperation.ADD_REPLACE, aclRights, RightPropagation.CHILDREN_ONLY);
-                NodeRightUpdateInfo chunkIt = chunkIt(docManClient.updateNodeRights(updateNodeRightsContext));
-                numItems += chunkIt.getNodeCount();
-                logger.info("Sucessfully applied rights to " + numItems + " child objects of folder " + node.getName() + "(id:" + node.getID() + ")");
-                exportIds.add(node.getID());
-            } else {
-                logger.warn(node.getName() + "(id:" + node.getID() + ") is not a folder");
-            }
-        }
+            logger.debug("Found folder " + node.getName() + "(id:" + node.getID() + ")");
+            NodeRights nodeRights = docManClient.getNodeRights(id);
+            List<NodeRight> aclRights = nodeRights.getACLRights();
+            logger.debug("Applying rights to childs of folder " + node.getName() + "(id:" + node.getID() + ")...");
+            ChunkedOperationContext updateNodeRightsContext = docManClient.updateNodeRightsContext(id, RightOperation.ADD_REPLACE, aclRights, RightPropagation.CHILDREN_ONLY);
+            updateNodeRightsContext.setChunkSize(1);
+            NodeRightUpdateInfo chunkIt = chunkIt(docManClient.updateNodeRights(updateNodeRightsContext));
+            numItems += chunkIt.getNodeCount();
+            logger.info("Sucessfully applied rights to " + numItems + " child objects of folder " + node.getName() + "(id:" + node.getID() + ")");
+            exportIds.add(node.getID());
+            
+         }
         setProcessedItems(exportIds.size());
     }
     

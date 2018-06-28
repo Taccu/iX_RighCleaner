@@ -49,18 +49,8 @@ public class RightApplier extends ContentServerTask{
                 exportIds.add(Long.valueOf(id));
                 List<NodeRight> aclRights = nodeRights.getACLRights();
                 ChunkedOperationContext updateNodeRightsContext = docClient.updateNodeRightsContext(Long.valueOf(id), RightOperation.ADD_REPLACE, aclRights, RightPropagation.CHILDREN_ONLY);
-                NodeRightUpdateInfo chunkIt = chunkIt(docClient.updateNodeRights(updateNodeRightsContext));
+                NodeRightUpdateInfo chunkIt = chunkIt(docClient.updateNodeRights(updateNodeRightsContext),updateNodeRightsContext);
             }
         });
-    }
-    private NodeRightUpdateInfo chunkIt(NodeRightUpdateInfo nrui){
-        if(nrui.getTotalNodeCount() > 0 || nrui.getSkippedNodeCount() != nrui.getTotalNodeCount()) {
-            logger.debug("Updated " + nrui.getNodeCount() + " items...");
-            DocumentManagement docManClient = getDocManClient();
-            ChunkedOperationContext context = nrui.getContext();
-            context.setChunkSize(200);
-            chunkIt(docManClient.updateNodeRights(context));
-        }
-            return nrui;
     }
 }

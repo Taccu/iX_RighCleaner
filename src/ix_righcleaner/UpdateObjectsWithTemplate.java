@@ -53,7 +53,7 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
     private final Long templateId;
     private final boolean processSubItems;
     private final String dbServer, dbName;
-    private final String select = "SELECT ExtendedData from csadmin.DTreeCore where SubType = 848 and DataID = ?;";
+    private final String select = "SELECT ExtendedData from csadmin2016.DTreeCore where SubType = 848 and DataID = ?;";
     public UpdateObjectsWithTemplate(Logger logger, String user, String password, Long templateId,String dbServer, String dbName,boolean processSubItems,boolean export){
         super(logger, user, password, export);
         this.templateId = templateId;
@@ -64,12 +64,6 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
     
     public String getNameOfTask(){
         return "Update-Objects-With-Template";
-    }
-    
-    public void connectToDatabase(String server, String db) throws ClassNotFoundException, SQLException {
-        URL = "jdbc:sqlserver://"+server +";databaseName=" +db+";integratedSecurity=true";
-        Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-        CONNECTION = DriverManager.getConnection(URL);
     }
     
     @Override
@@ -176,15 +170,19 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
             applyRights(docManClient, templateNode, node);
             if(processSubItems) {
                 GetNodesInContainerOptions options = new GetNodesInContainerOptions();
-                options.setMaxDepth(1);
-                options.setMaxResults(2);
+                options.setMaxDepth(0);
+                options.setMaxResults(5000000);
                 List<Node> nodesInTemplate = docManClient.getNodesInContainer(templateNode.getID(), options);
                 List<Node> nodesInWorkspace = docManClient.getNodesInContainer(node.getID(), options);
                 for(Node nTemplate : nodesInTemplate) {
                     for(Node nWorkspace : nodesInWorkspace){
                         if(nTemplate.getName().equalsIgnoreCase(nWorkspace.getName())){
+                            
                             applyRights(docManClient, nTemplate, nWorkspace);
                             inheritRights(docManClient, nWorkspace);
+                        }
+                        else {
+                            System.out.println("Template:" + nTemplate.getName()+"|Workspace:" +nWorkspace.getName());
                         }
                     }
                 }
@@ -193,29 +191,7 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
             //logger.info("Setting node rights from node " + templateNode.getName() + "(id:" + templateNode.getID() +")" + " to node " + node.getName() + "(id:" + node.getID() + ")");
         }
     }
-    
-    private void applyRights(DocumentManagement docManClient, Node from, Node to) {
-        logger.info("Setting node rights from node " + from.getName() + "(id:" + from.getID() +")" + " to node " + to.getName() + "(id:" + to.getID() + ")");
-        docManClient.setNodeRights(to.getID(), docManClient.getNodeRights(from.getID()));
-        
-    }
-    
-    private void inheritRights(DocumentManagement docManClient, Node from){
-        logger.info("Inheriting node right from node "+ from.getName() + "(id:" + from.getID() +")" );
-        ChunkedOperationContext updateNodeRightsContext = docManClient.updateNodeRightsContext(from.getID(), RightOperation.ADD_REPLACE, docManClient.getNodeRights(from.getID()).getACLRights(), RightPropagation.TARGET_AND_CHILDREN);
-        updateNodeRightsContext.setChunkSize(1);
-        NodeRightUpdateInfo chunkIt = chunkIt(docManClient.updateNodeRights(updateNodeRightsContext));
-    }
-    private NodeRightUpdateInfo chunkIt(NodeRightUpdateInfo nrui){
-        if(nrui.getNodeCount() > 0 || nrui.getSkippedNodeCount() != nrui.getNodeCount()) {
-            logger.debug("Updated " + nrui.getNodeCount() + " items...");
-            DocumentManagement docManClient = getDocManClient();
-            ChunkedOperationContext context = nrui.getContext();
-            context.setChunkSize(200);
-            nrui = chunkIt(docManClient.updateNodeRights(context));
-        }
-            return nrui;
-    }
+
     public List<Long> getNodesBySearch(SearchService sService){
         SingleSearchRequest query = new SingleSearchRequest();
         List<String> dataCollections = sService.getDataCollections();

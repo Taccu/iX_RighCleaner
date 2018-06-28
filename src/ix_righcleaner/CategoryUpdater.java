@@ -39,15 +39,4 @@ public class CategoryUpdater extends ContentServerTask{
         logger.info("Sucessfully applied category upgrade to " + numItems + " child objects.");
         setProcessedItems(numItems);
     }
-    private CategoryItemsUpgradeInfo chunkIt(CategoryItemsUpgradeInfo nrui){
-        if(nrui.getUpgradedCount() > 0 ) {
-            logger.debug("Updated " + nrui.getUpgradedCount() + " items...");
-            numItems += nrui.getUpgradedCount();
-            DocumentManagement docManClient = getDocManClient();
-            ChunkedOperationContext context = nrui.getContext();
-            context.setChunkSize(batchSize);
-            chunkIt(docManClient.upgradeCategoryItems(context));
-        }
-            return nrui;
-    }
 }

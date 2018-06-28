@@ -8,8 +8,14 @@ package ix_righcleaner;
 import com.opentext.ecm.api.OTAuthentication;
 import com.opentext.livelink.service.core.Authentication;
 import com.opentext.livelink.service.core.Authentication_Service;
+import com.opentext.livelink.service.core.ChunkedOperationContext;
+import com.opentext.livelink.service.docman.CategoryItemsUpgradeInfo;
 import com.opentext.livelink.service.docman.DocumentManagement;
 import com.opentext.livelink.service.docman.DocumentManagement_Service;
+import com.opentext.livelink.service.docman.Node;
+import com.opentext.livelink.service.docman.NodeRightUpdateInfo;
+import com.opentext.livelink.service.docman.RightOperation;
+import com.opentext.livelink.service.docman.RightPropagation;
 import com.opentext.livelink.service.memberservice.MemberService;
 import com.opentext.livelink.service.memberservice.MemberService_Service;
 import com.opentext.livelink.service.searchservices.SearchService;
@@ -22,6 +28,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -73,6 +81,57 @@ public abstract class ContentServerTask extends Thread{
         Thread.currentThread().interrupt();
     }
 
+   
+    
+    protected void connectToDatabase(String server, String db) throws ClassNotFoundException, SQLException {
+        URL = "jdbc:sqlserver://"+server +";databaseName=" +db+";integratedSecurity=true";
+        Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+        CONNECTION = DriverManager.getConnection(URL);
+    }
+    
+    protected void applyRights(DocumentManagement docManClient, Node from, Node to) {
+        logger.info("Setting node rights from node " + from.getName() + "(id:" + from.getID() +")" + " to node " + to.getName() + "(id:" + to.getID() + ")");
+        docManClient.setNodeRights(to.getID(), docManClient.getNodeRights(from.getID()));
+        
+    }
+    
+    protected void inheritRights(DocumentManagement docManClient, Node from){
+        logger.info("Inheriting node right from node "+ from.getName() + "(id:" + from.getID() +")" );
+        ChunkedOperationContext updateNodeRightsContext = docManClient.updateNodeRightsContext(from.getID(), RightOperation.ADD_REPLACE, docManClient.getNodeRights(from.getID()).getACLRights(), RightPropagation.TARGET_AND_CHILDREN);
+        updateNodeRightsContext.setChunkSize(1);
+        try {
+            NodeRightUpdateInfo chunkIt = chunkIt(docManClient.updateNodeRights(updateNodeRightsContext),updateNodeRightsContext);
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    protected CategoryItemsUpgradeInfo chunkIt(CategoryItemsUpgradeInfo nrui){
+        try {
+        if(nrui.getUpgradedCount() > 0 ) {
+            logger.debug("Updated " + nrui.getUpgradedCount() + " items...");
+            DocumentManagement docManClient = getDocManClient();
+            ChunkedOperationContext context = nrui.getContext();
+            context.setChunkSize(200);
+            chunkIt(docManClient.upgradeCategoryItems(context));
+        }
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+            return nrui;
+    }
+    
+    protected NodeRightUpdateInfo chunkIt(NodeRightUpdateInfo nrui, ChunkedOperationContext context){
+        if(!context.isFinished()) {
+            logger.debug("Updated " + nrui.getTotalNodeCount() + " items...");
+            DocumentManagement docManClient = getDocManClient();
+            context.setChunkSize(1);
+            chunkIt(docManClient.updateNodeRights(context), context);
+            
+        }
+        return nrui;
+    }
     public SOAPHeaderElement generateSOAPHeaderElement(OTAuthentication oauth) throws SOAPException {
         // The namespace of the OTAuthentication object
         final String ECM_API_NAMESPACE = "urn:api.ecm.opentext.com";

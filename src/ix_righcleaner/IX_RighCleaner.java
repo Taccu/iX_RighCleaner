@@ -44,7 +44,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
@@ -53,6 +53,7 @@ public class IX_RighCleaner extends Application {
     private TaskKeeper tKeeper;
     private boolean checkGlobalFields() {
         if(userField.getText() == null || userField.getText().isEmpty()) {
+            
             return false;
         }
         if(passField.getText() == null ||passField.getText().isEmpty()) {
@@ -62,7 +63,15 @@ public class IX_RighCleaner extends Application {
     }
     
     private boolean checkObjectTemplateTab(){
-        return (obTemp_templateField.getText() != null || obTemp_templateField.getText().isEmpty());
+        if(obTemp_dbNameField.getText() == null || obTemp_dbNameField.getText().isEmpty()) {
+            System.out.println("dbanme");
+            return false;
+        }
+        if(obTemp_dbServerField.getText() == null || obTemp_dbServerField.getText().isEmpty()) {
+            System.out.println("dbserver");
+            return false;
+        }
+        return !(obTemp_templateField.getText() == null || obTemp_templateField.getText().isEmpty());
     }
     
     private boolean checkApplierTab(){
@@ -72,7 +81,7 @@ public class IX_RighCleaner extends Application {
         if(appl_inherit == null) {
             return false;
         }
-        return (appl_folderIdsField.getText() != null || appl_folderIdsField.getText().isEmpty());
+        return !(appl_folderIdsField.getText() == null || appl_folderIdsField.getText().isEmpty());
     }
     
     private boolean checkLeftTab() {
@@ -236,7 +245,7 @@ public class IX_RighCleaner extends Application {
                         if(!checkObjectTemplateTab()){
                             return;
                         }
-                        UpdateObjectsWithTemplate utemplate_1 = new UpdateObjectsWithTemplate(logger, userField.getText(), passField.getText(),Long.valueOf(obTemp_templateField.getText()),exportField.isSelected());
+                        UpdateObjectsWithTemplate utemplate_1 = new UpdateObjectsWithTemplate(logger, userField.getText(), passField.getText(),Long.valueOf(obTemp_templateField.getText()), obTemp_dbServerField.getText(), obTemp_dbNameField.getText(),exportField.isSelected());
                         tKeeper.addNewTask(utemplate_1);
                         break;
                     default:
@@ -257,6 +266,8 @@ public class IX_RighCleaner extends Application {
                 appl_nodeToCopyField.clear();
                 appl_folderIdsField.clear();
                 obTemp_templateField.clear();
+                obTemp_dbServerField.clear();
+                obTemp_dbNameField.clear();
                 //appl_inherit;
             }
         });
@@ -329,6 +340,8 @@ public class IX_RighCleaner extends Application {
         appl_folderIdsField = new TextField();
         appl_inherit = new CheckBox();
         obTemp_templateField = new TextField();
+        obTemp_dbServerField= new TextField();
+        obTemp_dbNameField= new TextField();
         
         obTemp_templateField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         appl_nodeToCopyField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -384,8 +397,13 @@ public class IX_RighCleaner extends Application {
         HBox appl_inheritToChildBox = new HBox(10, new Label("Vererbe gesetzte Rechte auf Subitems"), appl_inherit);
         appl_inheritToChildBox.setPadding(new Insets(5,5,5,5));
         
+        
         HBox objTemp_templateBox = new HBox(10, new Label("Template ID"), obTemp_templateField);
         objTemp_templateBox.setPadding(new Insets(5,5,5,5));
+        HBox objTemp_dbServerBox = new HBox(10, new Label("DB Server"), obTemp_dbServerField);
+        objTemp_dbServerBox.setPadding(new Insets(5,5,5,5));
+        HBox objTemp_dbNameBox = new HBox(10 , new Label("Database name"), obTemp_dbNameField);
+        objTemp_dbNameBox.setPadding(new Insets(5,5,5,5));
         
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
@@ -410,7 +428,8 @@ public class IX_RighCleaner extends Application {
         f.addNode(appl_nodeCopyBox);
         f.addNode(appl_inheritToChildBox);
         g.addNode(objTemp_templateBox);
-        
+        g.addNode(objTemp_dbServerBox);
+        g.addNode(objTemp_dbNameBox);
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox,runBox);
         tPane.getTabs().add(a);
         tPane.getTabs().add(b);

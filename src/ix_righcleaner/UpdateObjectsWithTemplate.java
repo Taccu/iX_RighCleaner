@@ -15,6 +15,10 @@ import com.opentext.livelink.service.searchservices.SearchService;
 import com.opentext.livelink.service.searchservices.SingleSearchRequest;
 import com.opentext.livelink.service.searchservices.SingleSearchResponse;
 import static ix_righcleaner.ContentServerTask.SEARCH_API;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -43,14 +47,23 @@ import javafx.scene.layout.GridPane;
 public class UpdateObjectsWithTemplate extends ContentServerTask{
     
     private final Long templateId;
-    
-    public UpdateObjectsWithTemplate(Logger logger, String user, String password, Long templateId,boolean export){
+    private final String dbServer, dbName;
+    private final String select = "SELECT ExtendedData from .DTreeCore where SubType = 848 and DataID = ?;";
+    public UpdateObjectsWithTemplate(Logger logger, String user, String password, Long templateId,String dbServer, String dbName,boolean export){
         super(logger, user, password, export);
         this.templateId = templateId;
+        this.dbServer = dbServer;
+        this.dbName = dbName;
     }
     
     public String getNameOfTask(){
         return "Update-Objects-With-Template";
+    }
+    
+    public void connectToDatabase(String server, String db) throws ClassNotFoundException, SQLException {
+        URL = "jdbc:sqlserver://"+server +";databaseName=" +db+";integratedSecurity=true";
+        Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+        CONNECTION = DriverManager.getConnection(URL);
     }
     
     @Override
@@ -64,18 +77,46 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
         List<Long> workspaceIds = getNodesBySearch(sService);
         List<Node> workspaces = docManClient.getNodes(workspaceIds);
         logger.info("Found " + workspaces.size() + " workspaces in total");
+        try {
+            connectToDatabase(dbServer, dbName);
+        } catch (ClassNotFoundException | SQLException ex) {
+            handleError(ex);
+        }
+        PreparedStatement ps = null;
+        try {
+           ps = CONNECTION.prepareStatement(select);
+        } catch (SQLException ex) {
+            handleError(ex);
+        }
+        if(ps == null) 
+        {
+            handleError(new Exception("ps is null"));
+        }
         for(Node bWorkspace : workspaces) {
-            bWorkspace.getMetadata().getAttributeGroups().forEach((attribute ) -> {
-                logger.debug("Name:" + bWorkspace.getName()+"|Metadata:" + attribute.getDisplayName());
-                if(templateNode.getName().equals(attribute.getDisplayName())) {
-                    Node parentNode = docManClient.getNode(bWorkspace.getParentID());
-                    logger.info("Found node with match:" + bWorkspace.getName() + "(id:" + bWorkspace.getID() + ") Parent is:" + parentNode.getName() + "(id:" + parentNode.getID() + ")");
-                    //applyRights(docManClient, templateNode, bWorkspace);
-                    NodeItem item = new NodeItem(bWorkspace.getName(), false);
-                    item.setNode(bWorkspace);
-                    foundMatchingNodes.add(item);
+            try {
+                ps.setLong(1, bWorkspace.getID());
+                ResultSet rs = ps.executeQuery();
+                long idString = 0l;
+                if(rs.next()) {
+                    try {
+                        idString = Long.valueOf(rs.getString("ExtendedData").replaceAll("(.*)templateid'=", "").replaceAll(">>", ""));
+                    }catch(Exception e) {
+                        
+                    }
                 }
-            });
+                if(idString > 0l) {
+                    if(templateNode.getID() == idString){
+                        Node parentNode = docManClient.getNode(bWorkspace.getParentID());
+                        logger.info("Found node with match:" + bWorkspace.getName() + "(id:" + bWorkspace.getID() + ") Parent is:" + parentNode.getName() + "(id:" + parentNode.getID() + ")");
+                        
+                        NodeItem item = new NodeItem(bWorkspace.getName(), false);
+                        item.setNode(bWorkspace);
+                        foundMatchingNodes.add(item);
+                    }
+                }
+            } catch (SQLException ex) {
+                handleError(ex);
+            }
         }
         final FutureTask query = new FutureTask(new Callable() {
             @Override

@@ -21,6 +21,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -45,6 +46,8 @@ public abstract class ContentServerTask extends Thread{
     private int processedItems = 0;
     public final boolean export;
     public final ArrayList<Long> exportIds = new ArrayList<>();
+    public static Connection CONNECTION;
+    public static String URL;
     /**
      *
      * @param logger

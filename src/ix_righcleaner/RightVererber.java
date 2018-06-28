@@ -59,13 +59,13 @@ public class RightVererber extends ContentServerTask{
     }
     
     private NodeRightUpdateInfo chunkIt(NodeRightUpdateInfo nrui){
-        if(nrui.getTotalNodeCount() > 0 || nrui.getSkippedNodeCount() != nrui.getTotalNodeCount()) {
+        if(nrui.getNodeCount() > 0 || nrui.getSkippedNodeCount() != nrui.getNodeCount()) {
             logger.debug("Updated " + nrui.getNodeCount() + " items...");
             numItems += nrui.getNodeCount();
             DocumentManagement docManClient = getDocManClient();
             ChunkedOperationContext context = nrui.getContext();
             context.setChunkSize(200);
-            chunkIt(docManClient.updateNodeRights(context));
+            nrui = chunkIt(docManClient.updateNodeRights(context));
         }
             return nrui;
     }

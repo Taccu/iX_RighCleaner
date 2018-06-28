@@ -6,8 +6,13 @@
  */
 package ix_righcleaner;
 
+import com.opentext.livelink.service.core.ChunkedOperationContext;
 import com.opentext.livelink.service.docman.DocumentManagement;
+import com.opentext.livelink.service.docman.GetNodesInContainerOptions;
 import com.opentext.livelink.service.docman.Node;
+import com.opentext.livelink.service.docman.NodeRightUpdateInfo;
+import com.opentext.livelink.service.docman.RightOperation;
+import com.opentext.livelink.service.docman.RightPropagation;
 import com.opentext.livelink.service.searchservices.DataBagType;
 import com.opentext.livelink.service.searchservices.SGraph;
 import com.opentext.livelink.service.searchservices.SResultPage;
@@ -25,7 +30,6 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
-import java.util.logging.Level;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -47,13 +51,15 @@ import javafx.scene.layout.GridPane;
 public class UpdateObjectsWithTemplate extends ContentServerTask{
     
     private final Long templateId;
+    private final boolean processSubItems;
     private final String dbServer, dbName;
-    private final String select = "SELECT ExtendedData from .DTreeCore where SubType = 848 and DataID = ?;";
-    public UpdateObjectsWithTemplate(Logger logger, String user, String password, Long templateId,String dbServer, String dbName,boolean export){
+    private final String select = "SELECT ExtendedData from csadmin.DTreeCore where SubType = 848 and DataID = ?;";
+    public UpdateObjectsWithTemplate(Logger logger, String user, String password, Long templateId,String dbServer, String dbName,boolean processSubItems,boolean export){
         super(logger, user, password, export);
         this.templateId = templateId;
         this.dbServer = dbServer;
         this.dbName = dbName;
+        this.processSubItems = processSubItems;
     }
     
     public String getNameOfTask(){
@@ -101,7 +107,6 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
                     try {
                         idString = Long.valueOf(rs.getString("ExtendedData").replaceAll("(.*)templateid'=", "").replaceAll(">>", ""));
                     }catch(Exception e) {
-                        
                     }
                 }
                 if(idString > 0l) {
@@ -154,7 +159,6 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
 
                 result.ifPresent(list -> {
                     for(NodeItem item : list) {
-                        System.out.println(item.node);
                         toBeProcessed.add(item.origNode);
                     }
                 });
@@ -170,6 +174,21 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
         }
         for(Node node : get) {
             applyRights(docManClient, templateNode, node);
+            if(processSubItems) {
+                GetNodesInContainerOptions options = new GetNodesInContainerOptions();
+                options.setMaxDepth(1);
+                options.setMaxResults(2);
+                List<Node> nodesInTemplate = docManClient.getNodesInContainer(templateNode.getID(), options);
+                List<Node> nodesInWorkspace = docManClient.getNodesInContainer(node.getID(), options);
+                for(Node nTemplate : nodesInTemplate) {
+                    for(Node nWorkspace : nodesInWorkspace){
+                        if(nTemplate.getName().equalsIgnoreCase(nWorkspace.getName())){
+                            applyRights(docManClient, nTemplate, nWorkspace);
+                            inheritRights(docManClient, nWorkspace);
+                        }
+                    }
+                }
+            }
             exportIds.add(node.getID());
             //logger.info("Setting node rights from node " + templateNode.getName() + "(id:" + templateNode.getID() +")" + " to node " + node.getName() + "(id:" + node.getID() + ")");
         }
@@ -181,12 +200,25 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
         
     }
     
+    private void inheritRights(DocumentManagement docManClient, Node from){
+        logger.info("Inheriting node right from node "+ from.getName() + "(id:" + from.getID() +")" );
+        ChunkedOperationContext updateNodeRightsContext = docManClient.updateNodeRightsContext(from.getID(), RightOperation.ADD_REPLACE, docManClient.getNodeRights(from.getID()).getACLRights(), RightPropagation.TARGET_AND_CHILDREN);
+        updateNodeRightsContext.setChunkSize(1);
+        NodeRightUpdateInfo chunkIt = chunkIt(docManClient.updateNodeRights(updateNodeRightsContext));
+    }
+    private NodeRightUpdateInfo chunkIt(NodeRightUpdateInfo nrui){
+        if(nrui.getNodeCount() > 0 || nrui.getSkippedNodeCount() != nrui.getNodeCount()) {
+            logger.debug("Updated " + nrui.getNodeCount() + " items...");
+            DocumentManagement docManClient = getDocManClient();
+            ChunkedOperationContext context = nrui.getContext();
+            context.setChunkSize(200);
+            nrui = chunkIt(docManClient.updateNodeRights(context));
+        }
+            return nrui;
+    }
     public List<Long> getNodesBySearch(SearchService sService){
         SingleSearchRequest query = new SingleSearchRequest();
         List<String> dataCollections = sService.getDataCollections();
-        String regionName = "OTSubType";
-        String value = "848";
-        System.out.println(dataCollections.get(dataCollections.size()-1));
         query.setDataCollectionSpec("'LES Enterprise'");
         query.setQueryLanguage(SEARCH_API);
         query.setFirstResultToRetrieve(1);
@@ -197,10 +229,8 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
         query.getResultTransformationSpec().add("OTLocation");
         
         SingleSearchResponse results = sService.search(query, "");
-        System.out.println(results.getResults().getItem().size());
         SResultPage srp= results.getResults();
         List<SGraph> sra = results.getResultAnalysis();
-        System.out.println("where1=(\"OTSubType\":\"848\")");
         ArrayList<Long> nodes = new ArrayList<>();
         
         if(srp != null) {

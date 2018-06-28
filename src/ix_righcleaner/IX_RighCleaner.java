@@ -48,7 +48,7 @@ public class IX_RighCleaner extends Application {
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
-    private CheckBox exportField, exportParentField, appl_inherit;
+    private CheckBox obTemp_inheritField, exportField, exportParentField, appl_inherit;
     private final TabPane tPane = new TabPane();
     private TaskKeeper tKeeper;
     private boolean checkGlobalFields() {
@@ -245,7 +245,7 @@ public class IX_RighCleaner extends Application {
                         if(!checkObjectTemplateTab()){
                             return;
                         }
-                        UpdateObjectsWithTemplate utemplate_1 = new UpdateObjectsWithTemplate(logger, userField.getText(), passField.getText(),Long.valueOf(obTemp_templateField.getText()), obTemp_dbServerField.getText(), obTemp_dbNameField.getText(),exportField.isSelected());
+                        UpdateObjectsWithTemplate utemplate_1 = new UpdateObjectsWithTemplate(logger, userField.getText(), passField.getText(),Long.valueOf(obTemp_templateField.getText()), obTemp_dbServerField.getText(), obTemp_dbNameField.getText(), obTemp_inheritField.isSelected(),exportField.isSelected());
                         tKeeper.addNewTask(utemplate_1);
                         break;
                     default:
@@ -342,6 +342,7 @@ public class IX_RighCleaner extends Application {
         obTemp_templateField = new TextField();
         obTemp_dbServerField= new TextField();
         obTemp_dbNameField= new TextField();
+        obTemp_inheritField = new CheckBox();
         
         obTemp_templateField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         appl_nodeToCopyField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -404,6 +405,8 @@ public class IX_RighCleaner extends Application {
         objTemp_dbServerBox.setPadding(new Insets(5,5,5,5));
         HBox objTemp_dbNameBox = new HBox(10 , new Label("Database name"), obTemp_dbNameField);
         objTemp_dbNameBox.setPadding(new Insets(5,5,5,5));
+        HBox objTemp_inheritBox = new HBox(10, new Label("Inherit for every Subfolder"), obTemp_inheritField);
+        objTemp_inheritBox.setPadding(new Insets(5,5,5,5));
         
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
@@ -430,6 +433,7 @@ public class IX_RighCleaner extends Application {
         g.addNode(objTemp_templateBox);
         g.addNode(objTemp_dbServerBox);
         g.addNode(objTemp_dbNameBox);
+        g.addNode(objTemp_inheritBox);
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox,runBox);
         tPane.getTabs().add(a);
         tPane.getTabs().add(b);

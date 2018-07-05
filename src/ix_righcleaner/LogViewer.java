@@ -9,6 +9,7 @@ package ix_righcleaner;
  *
  * @author bho
  */
+
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;

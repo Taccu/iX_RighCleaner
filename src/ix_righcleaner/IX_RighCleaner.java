@@ -44,7 +44,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
@@ -63,6 +63,9 @@ public class IX_RighCleaner extends Application {
     }
     
     private boolean checkSetCatTab() {
+        if(cat_CatFromField.getText() == null | cat_CatFromField.getText().isEmpty()) {
+            return false;
+        }
         return !(cat_IdField.getText() == null || cat_IdField.getText().isEmpty());
     }
     
@@ -278,7 +281,7 @@ public class IX_RighCleaner extends Application {
                         if(!checkSetCatTab()){
                             return;
                         }
-                        SetCategoryToId catId_1 = new SetCategoryToId(logger,  userField.getText(), passField.getText(), Long.valueOf(cat_IdField.getText()),  exportField.isSelected());
+                        SetCategoryToId catId_1 = new SetCategoryToId(logger,  userField.getText(), passField.getText(), Long.valueOf(cat_IdField.getText()), Long.valueOf(cat_CatFromField.getText()),  exportField.isSelected());
                         tKeeper.addNewTask(catId_1);
                         break;
                     default:
@@ -304,6 +307,7 @@ public class IX_RighCleaner extends Application {
                 class_IdField.clear();
                 class_ClassIdsField.clear();
                 cat_IdField.clear();
+                cat_CatFromField.clear();
                 //appl_inherit;
             }
         });
@@ -382,6 +386,7 @@ public class IX_RighCleaner extends Application {
         class_IdField = new TextField();
         class_ClassIdsField = new TextField();
         cat_IdField = new TextField();
+        cat_CatFromField = new TextField();
         
         cat_IdField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         obTemp_templateField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -456,6 +461,8 @@ public class IX_RighCleaner extends Application {
         
         HBox cat_IdBox = new HBox(10, new Label("ID of folder"), cat_IdField);
         cat_IdBox.setPadding(new Insets(5,5,5,5));
+        HBox cat_catFromBox = new HBox(10, new Label("ID of Dummy Object"), cat_CatFromField);
+        cat_catFromBox.setPadding(new Insets(5,5,5,5));
         
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
@@ -488,6 +495,7 @@ public class IX_RighCleaner extends Application {
         h.addNode(class_folderIdBox);
         h.addNode(class_ClassIdsBox);
         i.addNode(cat_IdBox);
+        i.addNode(cat_catFromBox);
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox,runBox);
         tPane.getTabs().add(a);
         tPane.getTabs().add(b);

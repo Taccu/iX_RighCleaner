@@ -6,6 +6,8 @@
 package ix_righcleaner;
 
 import com.opentext.ecm.api.OTAuthentication;
+import com.opentext.livelink.service.classifications.Classifications;
+import com.opentext.livelink.service.classifications.Classifications_Service;
 import com.opentext.livelink.service.core.Authentication;
 import com.opentext.livelink.service.core.Authentication_Service;
 import com.opentext.livelink.service.core.ChunkedOperationContext;
@@ -199,6 +201,22 @@ public abstract class ContentServerTask extends Thread{
             ((WSBindingProvider) msClient).setOutboundHeaders(Headers.create(header));
             return msClient;
         } catch(Exception e) {
+            handleError(e);
+        }
+        return null;
+    }
+    
+    public Classifications getClassifyClient() {
+        // Create the DocumentManagement service client
+        try {
+            Classifications_Service docManService = new Classifications_Service();
+            Classifications docManClient = docManService.getBasicHttpBindingClassifications();
+            SOAPHeaderElement header;
+            header = generateSOAPHeaderElement(loginUserWithPassword(user, password));
+            ((WSBindingProvider) docManClient).setOutboundHeaders(Headers.create(header));
+            return docManClient;
+        }
+        catch(Exception e) {
             handleError(e);
         }
         return null;

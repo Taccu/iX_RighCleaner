@@ -8,11 +8,11 @@
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="iX_RighCleaner.jar" size="59721" download="eager" />
+    <jar href="iX_RighCleaner.jar" size="64596" download="eager" />
     <jar href="lib\FastInfoset-1.2.12.jar" size="293863" download="eager" />
     <jar href="lib\commons-collections4-4.1.jar" size="751238" download="eager" />
     <jar href="lib\commons-io-2.6.jar" size="214788" download="eager" />
-    <jar href="lib\cws.jar" size="671272" download="eager" />
+    <jar href="lib\cws.jar" size="717686" download="eager" />
     <jar href="lib\gmbal-api-only-3.1.0-b001.jar" size="21820" download="eager" />
     <jar href="lib\ha-api-3.1.9.jar" size="36383" download="eager" />
     <jar href="lib\istack-commons-runtime-2.13-sources.jar" size="32728" download="eager" />

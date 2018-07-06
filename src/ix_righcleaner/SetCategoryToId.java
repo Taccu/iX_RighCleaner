@@ -61,21 +61,26 @@ public class SetCategoryToId extends ContentServerTask{
             Metadata newMetaData = new Metadata();
             //List of attributes for the new metadata object
             ArrayList<AttributeGroup> newAttributes  = new ArrayList<>();
-            //Loop through current dummyAttributegroups and add them all          
-            for(AttributeGroup dummyGroup : dummyAttributes) {
-                if(dummyGroup.getDisplayName().equals("External Attributes")) {
-                    logger.debug("Ignoring Attribute group External Attributes. This is intentionally.");
-                    continue;
-                }
-                newAttributes.add(dummyGroup);         
-            }
-            
+       
             //Loop through the attribute groups currently on that node
             for(AttributeGroup group : cnAttributes) {
                 //this checks if the attribute on the node is not on the dummy node
                 //if so adds the attribute group to the new metadata of the node
                 if(!catNames.contains(group.getDisplayName())) {
+                    //category is only on currentObject not on dummyObject, so add the currentObject attribute to the newMetadata
                     newAttributes.add(group);
+                } else {
+                    //category is on currentobject and on the dummyobject, so get the category metadata from the the dummy object
+                    for(AttributeGroup dummyGroup : dummyAttributes) {
+                        if(dummyGroup.getDisplayName().equals("External Attributes")) {
+                            logger.debug("Ignoring Attribute group External Attributes. This is intentionally.");
+                            continue;
+                        }
+                        if(dummyGroup.getDisplayName().equals(group.getDisplayName())) {
+                            logger.debug("Acquiring the metadata for " + group.getDisplayName() +" from " + dummyNode.getName() + "(id:" + dummyNode.getID() + ")");
+                            newAttributes.add(dummyGroup);   
+                        }      
+                    }
                 }
             }
             //add all attribute groups to the new metadata object

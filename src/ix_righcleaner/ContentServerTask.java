@@ -168,6 +168,28 @@ public abstract class ContentServerTask extends Thread{
         return OT_AUTH;
     }
     
+    public OTAuthentication loginUserWithPassword(String user, String password, boolean force) {
+        String authToken;
+        try {
+            if(force) {
+                Authentication_Service authService = new Authentication_Service();
+                Authentication authClient = authService.getBasicHttpBindingAuthentication();
+                authToken = authClient.authenticateUser(user , password);
+                // Create the OTAuthentication object and set the authentication token
+                OT_AUTH.setAuthenticationToken(authToken);
+            }
+            if(OT_AUTH.getAuthenticationToken() == null || OT_AUTH.getAuthenticationToken().isEmpty()) {
+                Authentication_Service authService = new Authentication_Service();
+                Authentication authClient = authService.getBasicHttpBindingAuthentication();
+                authToken = authClient.authenticateUser(user , password);
+                // Create the OTAuthentication object and set the authentication token
+                OT_AUTH.setAuthenticationToken(authToken);
+            }
+        } catch (Exception e) {
+            handleError(e);
+        }
+        return OT_AUTH;
+    }
     public static void writeArrayToPath(List<Long> list, Path path) throws IOException {
         List<String> arrayList = new ArrayList<>(list.size());
         list.forEach((myLong) -> {
@@ -183,6 +205,21 @@ public abstract class ContentServerTask extends Thread{
             DocumentManagement docManClient = docManService.getBasicHttpBindingDocumentManagement();
             SOAPHeaderElement header;
             header = generateSOAPHeaderElement(loginUserWithPassword(user, password));
+            ((WSBindingProvider) docManClient).setOutboundHeaders(Headers.create(header));
+            return docManClient;
+        }
+        catch(Exception e) {
+            handleError(e);
+        }
+        return null;
+    }
+    public DocumentManagement getDocManClient(boolean force) {
+        // Create the DocumentManagement service client
+        try {
+            DocumentManagement_Service docManService = new DocumentManagement_Service();
+            DocumentManagement docManClient = docManService.getBasicHttpBindingDocumentManagement();
+            SOAPHeaderElement header;
+            header = generateSOAPHeaderElement(loginUserWithPassword(user, password, force));
             ((WSBindingProvider) docManClient).setOutboundHeaders(Headers.create(header));
             return docManClient;
         }

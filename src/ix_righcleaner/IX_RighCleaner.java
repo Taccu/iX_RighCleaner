@@ -16,6 +16,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -44,7 +45,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
@@ -60,6 +61,13 @@ public class IX_RighCleaner extends Application {
             return false;
         }
         return groupField.getText() != null;
+    }
+    
+    private boolean checkXmlTab() {
+        if(xml_CatNameField.getText() == null || xml_CatNameField.getText().isEmpty()) {
+            return false;
+        }
+        return !(xml_folderField.getText() == null ||xml_folderField.getText().isEmpty());
     }
     
     private boolean checkSetCatTab() {
@@ -284,6 +292,13 @@ public class IX_RighCleaner extends Application {
                         SetCategoryToId catId_1 = new SetCategoryToId(logger,  userField.getText(), passField.getText(), Long.valueOf(cat_IdField.getText()), Long.valueOf(cat_CatFromField.getText()),  exportField.isSelected());
                         tKeeper.addNewTask(catId_1);
                         break;
+                    case "Assign Category to Node from XML":
+                        if(!checkXmlTab()) {
+                            return;
+                        }
+                        CreateCategoryForCsv xml_1 = new CreateCategoryForCsv(logger, userField.getText(), passField.getText(), xml_folderField.getText(),xml_CatNameField.getText(), exportField.isSelected());
+                        tKeeper.addNewTask(xml_1);
+                        break;
                     default:
                         logger.error("Something went wrong");
                 }
@@ -308,6 +323,8 @@ public class IX_RighCleaner extends Application {
                 class_ClassIdsField.clear();
                 cat_IdField.clear();
                 cat_CatFromField.clear();
+                xml_folderField.clear();
+                xml_CatNameField.clear();
                 //appl_inherit;
             }
         });
@@ -387,6 +404,8 @@ public class IX_RighCleaner extends Application {
         class_ClassIdsField = new TextField();
         cat_IdField = new TextField();
         cat_CatFromField = new TextField();
+        xml_folderField = new TextField();
+        xml_CatNameField = new TextField();
         
         cat_IdField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         obTemp_templateField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -464,6 +483,11 @@ public class IX_RighCleaner extends Application {
         HBox cat_catFromBox = new HBox(10, new Label("ID of Dummy Object"), cat_CatFromField);
         cat_catFromBox.setPadding(new Insets(5,5,5,5));
         
+        HBox xml_folderBox = new HBox(10, new Label("Folder of xmls"), xml_folderField);
+        xml_folderBox.setPadding(new Insets(5,5,5,5));
+        HBox xml_CatNameBox = new HBox(10, new Label("Category Name"), xml_CatNameField);
+        xml_CatNameBox.setPadding(new Insets(5,5,5,5));
+                
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
         Container c = new Container("Update with Item ID");
@@ -473,6 +497,7 @@ public class IX_RighCleaner extends Application {
         Container g = new Container("Update Objects with Template ID");
         Container h = new Container("Remove classifications based on folder");
         Container i = new Container("Set Category Value to Node ID");
+        Container j = new Container("Assign Category to Node from XML");
         a.addNode(depthBox);
         a.addNode(itemBox);
         a.addNode(partitionBox);
@@ -496,6 +521,8 @@ public class IX_RighCleaner extends Application {
         h.addNode(class_ClassIdsBox);
         i.addNode(cat_IdBox);
         i.addNode(cat_catFromBox);
+        j.addNode(xml_folderBox);
+        j.addNode(xml_CatNameBox);
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox,runBox);
         tPane.getTabs().add(a);
         tPane.getTabs().add(b);
@@ -506,6 +533,7 @@ public class IX_RighCleaner extends Application {
         tPane.getTabs().add(g);
         tPane.getTabs().add(h);
         tPane.getTabs().add(i);
+        tPane.getTabs().add(j);
         SplitPane leftPane = new SplitPane(tPane,bottom);
         leftPane.setOrientation(Orientation.VERTICAL);
         SplitPane root = new SplitPane(leftPane,layout);

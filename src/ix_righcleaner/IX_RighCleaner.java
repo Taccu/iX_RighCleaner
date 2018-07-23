@@ -45,7 +45,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
@@ -61,6 +61,18 @@ public class IX_RighCleaner extends Application {
             return false;
         }
         return groupField.getText() != null;
+    }
+    
+    private boolean checkRemoveCatTab() {
+        if(remCat_hasIdField.getText() == null || remCat_hasIdField.getText().isEmpty()) {
+            
+            return false;
+        }
+        if(remCat_remIdField.getText() == null || remCat_remIdField.getText().isEmpty()) {
+            
+            return false;
+        }
+        return remCat_fromIdField.getText() != null;
     }
     
     private boolean checkXmlTab() {
@@ -299,6 +311,13 @@ public class IX_RighCleaner extends Application {
                         CreateCategoryForCsv xml_1 = new CreateCategoryForCsv(logger, userField.getText(), passField.getText(), xml_folderField.getText(),xml_CatNameField.getText(), exportField.isSelected());
                         tKeeper.addNewTask(xml_1);
                         break;
+                    case "Remove Category based on folder":
+                        if(!checkRemoveCatTab()) {
+                            return;
+                        }
+                        RemoveCategory rem_1 = new RemoveCategory(logger, userField.getText(), passField.getText(),Long.valueOf(remCat_fromIdField.getText()), Long.valueOf(remCat_hasIdField.getText()),Long.valueOf(remCat_remIdField.getText()), exportField.isSelected());
+                        tKeeper.addNewTask(rem_1);
+                        break;
                     default:
                         logger.error("Something went wrong");
                 }
@@ -325,6 +344,9 @@ public class IX_RighCleaner extends Application {
                 cat_CatFromField.clear();
                 xml_folderField.clear();
                 xml_CatNameField.clear();
+                remCat_hasIdField.clear();
+                remCat_remIdField.clear();
+                remCat_fromIdField.clear();
                 //appl_inherit;
             }
         });
@@ -406,7 +428,14 @@ public class IX_RighCleaner extends Application {
         cat_CatFromField = new TextField();
         xml_folderField = new TextField();
         xml_CatNameField = new TextField();
+        remCat_hasIdField = new TextField();
+        remCat_remIdField = new TextField();
+        remCat_fromIdField = new TextField();
         
+        
+        remCat_fromIdField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
+        remCat_remIdField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
+        remCat_hasIdField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         cat_IdField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         obTemp_templateField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         appl_nodeToCopyField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -487,7 +516,14 @@ public class IX_RighCleaner extends Application {
         xml_folderBox.setPadding(new Insets(5,5,5,5));
         HBox xml_CatNameBox = new HBox(10, new Label("Category Name"), xml_CatNameField);
         xml_CatNameBox.setPadding(new Insets(5,5,5,5));
-                
+        
+        HBox remCat_hasIdBox = new HBox(10, new Label("Has Category Id"), remCat_hasIdField);
+        remCat_hasIdBox.setPadding(new Insets(5,5,5,5));
+        HBox remCat_remIdBox = new HBox(10, new Label("ID of category to remove"), remCat_remIdField);
+        remCat_remIdBox.setPadding(new Insets(5,5,5,5));
+        HBox remCat_fromIdBox = new HBox(10, new Label("Id of folder root"), remCat_fromIdField);
+        remCat_fromIdBox.setPadding(new Insets(5,5,5,5));
+        
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
         Container c = new Container("Update with Item ID");
@@ -498,6 +534,7 @@ public class IX_RighCleaner extends Application {
         Container h = new Container("Remove classifications based on folder");
         Container i = new Container("Set Category Value to Node ID");
         Container j = new Container("Assign Category to Node from XML");
+        Container k = new Container("Remove Category based on folder");
         a.addNode(depthBox);
         a.addNode(itemBox);
         a.addNode(partitionBox);
@@ -523,6 +560,9 @@ public class IX_RighCleaner extends Application {
         i.addNode(cat_catFromBox);
         j.addNode(xml_folderBox);
         j.addNode(xml_CatNameBox);
+        k.addNode(remCat_hasIdBox);
+        k.addNode(remCat_remIdBox);
+        k.addNode(remCat_fromIdBox);
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox,runBox);
         tPane.getTabs().add(a);
         tPane.getTabs().add(b);
@@ -534,6 +574,7 @@ public class IX_RighCleaner extends Application {
         tPane.getTabs().add(h);
         tPane.getTabs().add(i);
         tPane.getTabs().add(j);
+        tPane.getTabs().add(k);
         SplitPane leftPane = new SplitPane(tPane,bottom);
         leftPane.setOrientation(Orientation.VERTICAL);
         SplitPane root = new SplitPane(leftPane,layout);

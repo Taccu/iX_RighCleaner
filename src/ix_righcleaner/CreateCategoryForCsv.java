@@ -74,7 +74,8 @@ public class CreateCategoryForCsv extends ContentServerTask{
                 createCategory = createCategory(item);
                 newMetadata.getAttributeGroups().add(createCategory);
                 docManClient.setNodeMetadata(node.getID(), newMetadata);
-            } catch (IllegalArgumentException | IllegalAccessException ex) {
+            } catch (Exception ex) {
+                ex.printStackTrace();
                 logger.error("Couldn't create category for " + item.getId() + ". Error was " + ex.getMessage());
             }
             logger.debug(String.valueOf(item.getId()));
@@ -97,40 +98,51 @@ public class CreateCategoryForCsv extends ContentServerTask{
                         date_value.setDescription(attr.getDisplayName());
                         date_value.setKey(attr.getKey());
                         try {
-                            
+                            if(item.getDocumentDate() == null) {
+                                continue;
+                            }
                             result = DatatypeFactory.newInstance().newXMLGregorianCalendar(item.getDocumentDate());
                             date_value.getValues().add(result);
                             group.getValues().add(date_value);
                         } catch (DatatypeConfigurationException ex) {
                             java.util.logging.Logger.getLogger(CreateCategoryForCsv.class.getName()).log(Level.SEVERE, null, ex);
+                        } finally {
+                            break;
                         }
-                        break;
                 case "PatientDateOfBirth":
                     XMLGregorianCalendar pdb_result;
                     DateValue pdb_value = new DateValue();
                     pdb_value.setDescription(attr.getDisplayName());
                     pdb_value.setKey(attr.getKey());
                         try {
+                            if(item.getPatientDateOfBirth() == null ) {
+                                continue;
+                            }
                             pdb_result = DatatypeFactory.newInstance().newXMLGregorianCalendar(item.getPatientDateOfBirth());
                             pdb_value.getValues().add(pdb_result);
                             group.getValues().add(pdb_value);
                         } catch (DatatypeConfigurationException ex) {
                             java.util.logging.Logger.getLogger(CreateCategoryForCsv.class.getName()).log(Level.SEVERE, null, ex);
+                        } finally {
+                            break;
                         }
-                    break;
                 case "BatchDate":
                     XMLGregorianCalendar bd_result;
                     DateValue bd_value = new DateValue();
                     bd_value.setDescription(attr.getDisplayName());
                     bd_value.setKey(attr.getKey());
                         try {
+                            if(item.getBatchDate() == null ) {
+                                continue;
+                            }
                             bd_result = DatatypeFactory.newInstance().newXMLGregorianCalendar(item.getBatchDate());
                             bd_value.getValues().add(bd_result);
                             group.getValues().add(bd_value);
                         } catch (DatatypeConfigurationException ex) {
                             java.util.logging.Logger.getLogger(CreateCategoryForCsv.class.getName()).log(Level.SEVERE, null, ex);
+                        } finally {
+                            break;
                         }
-                    break;
                 default:
                     StringValue str_value = new StringValue();
                     str_value.setDescription(attr.getDisplayName());
@@ -164,10 +176,12 @@ public class CreateCategoryForCsv extends ContentServerTask{
     }
     private TriaScan parseXml(Path xml) throws JAXBException{
         JAXBContext jc = JAXBContext.newInstance(TriaScan.class);
-
+        
         Unmarshaller unmarshaller = jc.createUnmarshaller();
         TriaScan triascan = (TriaScan) unmarshaller.unmarshal(xml.toFile());
+        
         return triascan;
+       
     }
       
 }

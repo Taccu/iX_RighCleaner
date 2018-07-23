@@ -53,7 +53,7 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
     private final Long templateId;
     private final boolean processSubItems;
     private final String dbServer, dbName;
-    private final String select = "SELECT ExtendedData from csadmin2016.DTreeCore where SubType = 848 and DataID = ?;";
+    private final String select = "SELECT ExtendedData from csadmin.DTreeCore where SubType = 848 and DataID = ?;";
     public UpdateObjectsWithTemplate(Logger logger, String user, String password, Long templateId,String dbServer, String dbName,boolean processSubItems,boolean export){
         super(logger, user, password, export);
         this.templateId = templateId;

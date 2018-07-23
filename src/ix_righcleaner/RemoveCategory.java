@@ -40,18 +40,42 @@ public class RemoveCategory extends ContentServerTask {
     public void doWork() {
         DocumentManagement docManClient = getDocManClient();
         GetNodesInContainerOptions options = new GetNodesInContainerOptions();
-        options.setMaxDepth(MAX_PRIORITY);
-        options.setMaxResults(MAX_PRIORITY);
+        options.setMaxDepth(Integer.MAX_VALUE);
+        options.setMaxResults(Integer.MAX_VALUE);
         List<Node> nodes = docManClient.getNodesInContainer(baseFolder, options);
         
         for(Node node : nodes) {
             if(node.getName().matches(".*([.])tif.*$")) {
                 logger.debug("Processing " + node.getName() + "(id:" + node.getID() + ")...");
                 Metadata metadata = processMetadata(node,node.getMetadata());
-                docManClient.setNodeMetadata( node.getID(), metadata);
+                for(int i = 0; i < 3; i++) {
+                    if(updateMetadata(docManClient, node, metadata)) continue;
+                    
+                    docManClient = getDocManClient(true);
+                    logger.warn("Session timed-out. Getting new login");
+                    logger.warn("Retrying "+ node.getName() + "(id:" + node.getID() + ")" );
+                }
             }
         }      
     }
+    
+    private boolean updateMetadata(DocumentManagement docManClient, Node node, Metadata metadata) {
+        try {
+            docManClient.setNodeMetadata( node.getID(), metadata);
+            return true;
+        }
+        catch(Exception ex) {
+            if(ex.getMessage().contains("Your session has timed-out.")) {
+                return false;
+            }
+            else {
+                handleError(ex);
+            }
+        }
+        return false;
+    }
+    
+    
     private Metadata processMetadata(Node node, Metadata metadata) {
         boolean nodeHasId = false;
         boolean nodeHasIdToRemove = false;
@@ -63,10 +87,11 @@ public class RemoveCategory extends ContentServerTask {
             if(group.getKey().matches(idToRemove + ".*")) {
                 nodeHasIdToRemove = true;
                 removeGroup = group;
+                exportIds.add(node.getID());
             }
         }
         if(nodeHasId && nodeHasIdToRemove) {
-            logger.debug("Removing " + removeGroup.getDisplayName() + " from " +  node.getName() + "(id:" + node.getID() + ")");
+            logger.info("Removing " + removeGroup.getDisplayName() + " from " +  node.getName() + "(id:" + node.getID() + ")");
             metadata.getAttributeGroups().remove(removeGroup);
         }
         if(!nodeHasId && nodeHasIdToRemove) {

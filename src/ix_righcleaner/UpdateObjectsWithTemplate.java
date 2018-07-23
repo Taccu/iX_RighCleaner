@@ -99,7 +99,7 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
                 long idString = 0l;
                 if(rs.next()) {
                     try {
-                        idString = Long.valueOf(rs.getString("ExtendedData").replaceAll("(.*)templateid'=", "").replaceAll(">>", ""));
+                        idString = Long.valueOf(rs.getString("ExtendedData").replaceAll("(.*)templateid'=", "").replaceAll(">(.*)", ""));
                     }catch(Exception e) {
                     }
                 }

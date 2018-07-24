@@ -35,14 +35,18 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Insets;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 
 /**
  *
@@ -117,6 +121,10 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
                 handleError(ex);
             }
         }
+        
+        ObservableList<NodeItem> data = FXCollections.observableArrayList();
+        foundMatchingNodes.forEach(data::add);
+        FilteredList<NodeItem> filteredData = new FilteredList<>(data, s -> true);
         final FutureTask query = new FutureTask(new Callable() {
             @Override
             public ArrayList<Node> call ()throws Exception {
@@ -130,12 +138,31 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
                 grid.setHgap(10);
                 grid.setVgap(10);
                 grid.setPadding(new Insets(20, 150, 10, 10));
+                filteredData.forEach((node) -> {
+                    if(node.getName().matches("[A-Z]{3}[0-9]{3}$")){
+                        
+                    }else {
+                        node.setOn(true);
+                    }
+                });
+                TextField filterInput = new TextField();
+                filterInput.textProperty().addListener(obs->{
+                    String filter = filterInput.getText(); 
+                    if(filter == null || filter.length() == 0) {
+                        filteredData.setPredicate(s -> true);
+                    }
+                    else {
+                        filteredData.setPredicate(s -> s.getName().contains(filter));
+                    }
+                });
                 ListView<NodeItem> listView = new ListView<>();
 
-                listView.getItems().addAll(foundMatchingNodes);
+                listView.getItems().addAll(filteredData);
+                
                 listView.setCellFactory(CheckBoxListCell.forListView(NodeItem::onProperty));
-
-                dialog.getDialogPane().setContent(listView);
+                VBox vbox = new VBox(filterInput, listView);
+                
+                dialog.getDialogPane().setContent(vbox);
 
                 dialog.setResultConverter(dialogButton -> {
                     if(dialogButton == confirm) {
@@ -160,13 +187,22 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
             }
             });
         Platform.runLater(query);
+        docManClient = getDocManClient(true);
+        logger.info("Reauthenticating...");
         ArrayList<Node> get = new ArrayList<>();
         try {
             get= (ArrayList<Node>) query.get();
         } catch (InterruptedException | ExecutionException ex) {
             handleError(ex);
         }
+        int i = 0;
+        
         for(Node node : get) {
+            i++;
+            if((i%10) == 0) {
+                docManClient = getDocManClient(true);
+                logger.info("Reauthenticating...");
+            }
             applyRights(docManClient, templateNode, node);
             if(processSubItems) {
                 GetNodesInContainerOptions options = new GetNodesInContainerOptions();
@@ -229,9 +265,10 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
         private final StringProperty node  = new SimpleStringProperty();
         private final BooleanProperty on = new SimpleBooleanProperty();
         private  Node origNode;
-    public NodeItem(String node, boolean on) {
+        public NodeItem(String node, boolean on) {
             setName(node);
             setOn(on);
+            
         }
         
         public void setNode(Node node) {

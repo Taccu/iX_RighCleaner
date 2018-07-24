@@ -69,6 +69,13 @@ public class CreateCategoryForCsv extends ContentServerTask{
         for(TriaScan item : items) {
             Node node = docManClient.getNode(item.getId());
             Metadata newMetadata = node.getMetadata();
+            for(AttributeGroup group : newMetadata.getAttributeGroups()) {
+                if(group.getKey().startsWith(String.valueOf(catName))) {
+                    logger.warn(item.getId()+ " already had category. Trying to remove...");
+                    newMetadata.getAttributeGroups().remove(group);
+                    break;
+                }
+            }
             AttributeGroup createCategory;
             try {
                 createCategory = createCategory(item);

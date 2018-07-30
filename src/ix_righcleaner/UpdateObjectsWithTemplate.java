@@ -24,7 +24,9 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -42,6 +44,7 @@ import javafx.geometry.Insets;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxListCell;
@@ -67,7 +70,7 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
     }
     
     public String getNameOfTask(){
-        return "Update-Objects-With-Template";
+        return "Update-Objects-With-Template_" + templateId +"_" + String.valueOf(new SimpleDateFormat("yyyy-MM-dd_hhmm").format(new Date()));
     }
     
     @Override
@@ -98,26 +101,34 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
         }
         for(Node bWorkspace : workspaces) {
             try {
+                
                 ps.setLong(1, bWorkspace.getID());
                 ResultSet rs = ps.executeQuery();
                 long idString = 0l;
                 if(rs.next()) {
                     try {
-                        idString = Long.valueOf(rs.getString("ExtendedData").replaceAll("(.*)templateid'=", "").replaceAll(">(.*)", ""));
-                    }catch(Exception e) {
-                    }
-                }
-                if(idString > 0l) {
-                    if(templateNode.getID() == idString){
-                        Node parentNode = docManClient.getNode(bWorkspace.getParentID());
-                        logger.info("Found node with match:" + bWorkspace.getName() + "(id:" + bWorkspace.getID() + ") Parent is:" + parentNode.getName() + "(id:" + parentNode.getID() + ")");
+                        String temp = rs.getString("ExtendedData").replaceAll("(.*)templateid'=", "").replaceAll(">(.*)", "");
+                        System.out.println("|"+temp+"|");
+                        if(checkIfLong(temp)) {
+                            idString = Long.valueOf(temp);  
+                        } else {
+                            idString = 0l;
+                            logger.warn("Node doesn't have a valid templateId " + bWorkspace.getName() + "(id:" + bWorkspace.getID() + ")");
+                        }
                         
-                        NodeItem item = new NodeItem(bWorkspace.getName(), false);
-                        item.setNode(bWorkspace);
-                        foundMatchingNodes.add(item);
+                    }catch(Exception e) {
+                        logger.error(e.getMessage());
                     }
                 }
-            } catch (SQLException ex) {
+                if(templateId == idString){
+                    Node parentNode = docManClient.getNode(bWorkspace.getParentID());
+                    logger.info("Found node with match:" + bWorkspace.getName() + "(id:" + bWorkspace.getID() + ") Parent is:" + parentNode.getName() + "(id:" + parentNode.getID() + ")");
+
+                    NodeItem item = new NodeItem(bWorkspace.getName(), false);
+                    item.setNode(bWorkspace);
+                    foundMatchingNodes.add(item);
+                }
+        } catch (SQLException ex) {
                 handleError(ex);
             }
         }
@@ -145,6 +156,7 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
                         node.setOn(true);
                     }
                 });
+                Label count = new Label(String.valueOf(filteredData.size()));
                 TextField filterInput = new TextField();
                 filterInput.textProperty().addListener(obs->{
                     String filter = filterInput.getText(); 
@@ -160,8 +172,8 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
                 listView.getItems().addAll(filteredData);
                 
                 listView.setCellFactory(CheckBoxListCell.forListView(NodeItem::onProperty));
-                VBox vbox = new VBox(filterInput, listView);
-                
+                VBox vbox = new VBox(count,filterInput, listView);
+                vbox.setPadding(new Insets(5,5,5,5));
                 dialog.getDialogPane().setContent(vbox);
 
                 dialog.setResultConverter(dialogButton -> {
@@ -228,13 +240,22 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
         }
     }
 
+    private boolean checkIfLong(String string) {
+        try{
+            Long.valueOf(string);
+        }
+        catch(Exception e) {
+            return false;
+        }
+        return true;
+    }
     public List<Long> getNodesBySearch(SearchService sService){
         SingleSearchRequest query = new SingleSearchRequest();
         List<String> dataCollections = sService.getDataCollections();
         query.setDataCollectionSpec("'LES Enterprise'");
         query.setQueryLanguage(SEARCH_API);
         query.setFirstResultToRetrieve(1);
-        query.setNumResultsToRetrieve(10000);
+        query.setNumResultsToRetrieve(500000);
         query.setResultSetSpec("where1=(\"OTSubType\":\"848\")&lookfor1=complexquery");
         query.setResultOrderSpec("sortByRegion=OTCreatedBy");
         query.getResultTransformationSpec().add("OTName");

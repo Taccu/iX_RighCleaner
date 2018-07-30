@@ -5,7 +5,6 @@
  */
 package ix_righcleaner;
 
-import com.opentext.livelink.service.core.DataValue;
 import com.opentext.livelink.service.core.DateValue;
 import com.opentext.livelink.service.core.StringValue;
 import com.opentext.livelink.service.docman.Attribute;
@@ -20,11 +19,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;

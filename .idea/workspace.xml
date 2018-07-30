@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="70c39eff-2981-4d11-8bd8-154a87b74c90" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/build/built-jar.properties" beforeDir="false" afterPath="$PROJECT_DIR$/build/built-jar.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/CSTab.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/CategoryUpdater.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/Container.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/ContentServerTask$1.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/ContentServerTask.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/Entry.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/GetRightWithUser.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/IX_RighCleaner$1.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/IX_RighCleaner.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/Level.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/Log.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/LogRecord.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/LogView$1.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/LogView$2.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/LogView.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/Logger.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/Lorem.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/RightVererber.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/TaskKeeper.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/Updater$UpdateNodes.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/Updater.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/UpdaterDataIds.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/ix_righcleaner/log-view.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/iX_RighCleaner.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/iX_RighCleaner.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/iX_RighCleaner.jnlp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/FastInfoset-1.2.12.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/commons-collections4-4.1.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/commons-io-2.6.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/cws.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/gmbal-api-only-3.1.0-b001.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/ha-api-3.1.9.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/istack-commons-runtime-2.13-sources.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/javax.annotation-3.2-b06.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/jaxb-api-2.2.7.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/jaxb-impl-2.2.7-b53.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/jaxws-api-2.2.8.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/jaxws-rt-2.2.8-b13729.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/jsr181-api-1.0-MR1.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/mimepull-1.9.1.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/osgi.core-7.0.0.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/policy-2.3.1.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/saaj-api-1.3.4.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/saaj-impl-1.3.20.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/stax-ex-1.7.1.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/lib/streambuffer-1.5.1.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/web-files/dtjava.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/web-files/error.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/web-files/get_java.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/web-files/get_javafx.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/web-files/javafx-chrome.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/web-files/javafx-loading-100x100.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/web-files/javafx-loading-25x25.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/web-files/upgrade_java.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/web-files/upgrade_javafx.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/nbproject/private/private.xml" beforeDir="false" afterPath="$PROJECT_DIR$/nbproject/private/private.xml" afterDir="false" />
+    </list>
+    <ignored path="$PROJECT_DIR$/out/" />
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FUSProjectUsageTrigger">
+    <session id="29783640">
+      <usages-collector id="statistics.lifecycle.project">
+        <counts>
+          <entry key="project.closed" value="1" />
+          <entry key="project.open.time.8" value="1" />
+          <entry key="project.opened" value="1" />
+        </counts>
+      </usages-collector>
+    </session>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="260" />
+    <option name="y" value="20" />
+    <option name="width" value="1400" />
+    <option name="height" value="1000" />
+  </component>
+  <component name="ProjectView">
+    <navigator proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="PackagesPane" />
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="iX_RighCleaner" type="b2602c69:ProjectViewProjectNode" />
+              <item name="iX_RighCleaner" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="AndroidView" />
+      <pane id="Scope" />
+    </panes>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="Applet" factoryName="Applet">
+      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="Application" factoryName="Application">
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="JUnit" factoryName="JUnit">
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="TestNG" factoryName="TestNG">
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <properties />
+      <listeners />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType" factoryName="Plugin">
+      <module name="" />
+      <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m -ea" />
+      <option name="PROGRAM_PARAMETERS" />
+      <predefined_log_file id="idea.log" enabled="true" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="70c39eff-2981-4d11-8bd8-154a87b74c90" name="Default" comment="" />
+      <created>1532527477131</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1532527477131</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
+    <layout>
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25266525" />
+      <window_info id="Structure" order="1" weight="0.25" />
+      <window_info id="Image Layers" order="2" />
+      <window_info id="Designer" order="3" />
+      <window_info id="UI Designer" order="4" />
+      <window_info id="Capture Tool" order="5" />
+      <window_info id="Favorites" order="6" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Run" order="2" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" weight="0.32980973" />
+      <window_info anchor="bottom" id="Version Control" order="8" />
+      <window_info anchor="bottom" id="Terminal" order="9" />
+      <window_info anchor="right" id="Commander" order="0" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="Palette" order="3" />
+      <window_info anchor="right" id="Capture Analysis" order="4" />
+      <window_info anchor="right" id="Theme Preview" order="5" />
+      <window_info anchor="right" id="Palette&#9;" order="6" />
+      <window_info anchor="right" id="Kite" order="7" />
+      <window_info anchor="right" id="Maven Projects" order="8" />
+    </layout>
+  </component>
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="masterDetails">
+    <states>
+      <state key="ProjectJDKs.UI">
+        <settings>
+          <last-edited>1.8</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+    </states>
+  </component>
+</project>

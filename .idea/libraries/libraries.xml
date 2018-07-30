@@ -1,0 +1,28 @@
+<component name="libraryTable">
+  <library name="libraries">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/libraries/jaxws-rt-2.2.8-b13729.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/jsr181-api-1.0-MR1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/streambuffer-1.5.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/saaj-impl-1.3.20.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/jaxws-api-2.2.8.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/jaxb-api-2.2.7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/policy-2.3.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/javax.annotation-3.2-b06.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/commons-io-2.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/FastInfoset-1.2.12.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/istack-commons-runtime-2.13-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/jaxb-impl-2.2.7-b53.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/cws.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/ha-api-3.1.9.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/osgi.core-7.0.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/mimepull-1.9.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/gmbal-api-only-3.1.0-b001.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/commons-collections4-4.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/saaj-api-1.3.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/stax-ex-1.7.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

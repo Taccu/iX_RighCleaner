@@ -29,7 +29,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -311,7 +310,7 @@ public abstract class ContentServerTask extends Thread{
                 logger.info("Finished task " + getNameOfTask() + " in " + elapsedTime + " milliseconds...");
             }
             List<LogRecord> arrayList = new ArrayList<>();
-            logger.getLog().drainTo(arrayList);
+            logger.getLog().copyTo(arrayList);
             List<String> logList = new ArrayList<>();
             arrayList.forEach((myLong) -> {
                 switch(myLong.getLevel()) {
@@ -336,7 +335,7 @@ public abstract class ContentServerTask extends Thread{
                     Files.delete(Paths.get("ix-right.log"));
                 }
                 Files.createFile(Paths.get("ix-right.log"));
-                Files.write(Paths.get("ix-right.log"),logList,Charset.defaultCharset(),StandardOpenOption.APPEND);
+                Files.write(Paths.get("ix-right.log"),logList,Charset.defaultCharset());
             } catch (IOException ex) {
                 java.util.logging.Logger.getLogger(LogView.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
             }

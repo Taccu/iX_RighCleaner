@@ -37,6 +37,10 @@ class Log {
         log.drainTo(collection);
     }
 
+    public void copyTo(Collection<? super LogRecord> collection){
+        collection.addAll(log);
+    }
+    
     public void offer(LogRecord record) {
         log.offer(record);
     }

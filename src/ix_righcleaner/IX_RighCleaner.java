@@ -45,11 +45,11 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField moveRg_srcFoldField, moveRg_invoiceField, moveRg_mandantField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
-    private CheckBox obTemp_inheritField, exportField, exportParentField, appl_inherit;
+    private CheckBox moveRg_categoriesField,moveRg_inheritField,obTemp_inheritField, exportField, exportParentField, appl_inherit;
     private final TabPane tPane = new TabPane();
     private TaskKeeper tKeeper;
     private boolean checkGlobalFields() {
@@ -61,6 +61,16 @@ public class IX_RighCleaner extends Application {
             return false;
         }
         return groupField.getText() != null;
+    }
+    
+    private boolean checkMoveRgTab() {
+        if(moveRg_invoiceField.getText() == null || moveRg_invoiceField.getText().isEmpty()){
+            return false;
+        }
+        if(moveRg_mandantField.getText() == null || moveRg_mandantField.getText().isEmpty()) {
+            return false;
+        }
+        return moveRg_srcFoldField.getText() != null;
     }
     
     private boolean checkRemoveCatTab() {
@@ -318,6 +328,13 @@ public class IX_RighCleaner extends Application {
                         RemoveCategory rem_1 = new RemoveCategory(logger, userField.getText(), passField.getText(),Long.valueOf(remCat_fromIdField.getText()), Long.valueOf(remCat_hasIdField.getText()),Long.valueOf(remCat_remIdField.getText()), exportField.isSelected());
                         tKeeper.addNewTask(rem_1);
                         break;
+                    case "Move Rechnungen based on Category":
+                        if(!checkMoveRgTab()) {
+                            return;
+                        }
+                        MoveRechnungen move_1 = new MoveRechnungen(logger, userField.getText(), passField.getText(),Long.valueOf(moveRg_srcFoldField.getText()),Long.valueOf(moveRg_invoiceField.getText()), Long.valueOf(moveRg_mandantField.getText()),moveRg_inheritField.isSelected(),moveRg_categoriesField.isSelected(), exportField.isSelected());
+                        tKeeper.addNewTask(move_1);
+                        break;
                     default:
                         logger.error("Something went wrong");
                 }
@@ -347,6 +364,9 @@ public class IX_RighCleaner extends Application {
                 remCat_hasIdField.clear();
                 remCat_remIdField.clear();
                 remCat_fromIdField.clear();
+                moveRg_srcFoldField.clear();
+                moveRg_invoiceField.clear();
+                moveRg_mandantField.clear();
                 //appl_inherit;
             }
         });
@@ -431,8 +451,15 @@ public class IX_RighCleaner extends Application {
         remCat_hasIdField = new TextField();
         remCat_remIdField = new TextField();
         remCat_fromIdField = new TextField();
+        moveRg_srcFoldField = new TextField();
+        moveRg_invoiceField = new TextField();
+        moveRg_mandantField = new TextField();
+        moveRg_inheritField = new CheckBox();
+        moveRg_categoriesField = new CheckBox();
         
-        
+        moveRg_invoiceField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
+        moveRg_mandantField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
+        moveRg_srcFoldField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         remCat_fromIdField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         remCat_remIdField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         remCat_hasIdField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -524,6 +551,17 @@ public class IX_RighCleaner extends Application {
         HBox remCat_fromIdBox = new HBox(10, new Label("Id of folder root"), remCat_fromIdField);
         remCat_fromIdBox.setPadding(new Insets(5,5,5,5));
         
+        HBox moveRg_srcFoldIdBox = new HBox(10, new Label("Quellordner"), moveRg_srcFoldField);
+        moveRg_srcFoldIdBox.setPadding(new Insets(5,5,5,5));
+        HBox moveRg_invoiceIdBox = new HBox(10, new Label("Invoice Category ID"),moveRg_invoiceField);
+        moveRg_invoiceIdBox.setPadding(new Insets(5,5,5,5));
+        HBox moveRg_mandantIdBox = new HBox(10, new Label("Mandant Category ID"),moveRg_mandantField);
+        moveRg_mandantIdBox.setPadding(new Insets(5,5,5,5));
+        HBox moveRg_inheritBox = new HBox(10, new Label("Inherit Permissions from destination"), moveRg_inheritField);
+        moveRg_inheritBox.setPadding(new Insets(5,5,5,5));
+        HBox moveRg_categoriesBox = new HBox(10, new Label("If not selected, keeps the original categories"), moveRg_categoriesField);
+        moveRg_categoriesBox.setPadding(new Insets(5,5,5,5));
+        
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
         Container c = new Container("Update with Item ID");
@@ -535,6 +573,7 @@ public class IX_RighCleaner extends Application {
         Container i = new Container("Set Category Value to Node ID");
         Container j = new Container("Assign Category to Node from XML");
         Container k = new Container("Remove Category based on folder");
+        Container l = new Container("Move Rechnungen based on Category");
         a.addNode(depthBox);
         a.addNode(itemBox);
         a.addNode(partitionBox);
@@ -563,6 +602,11 @@ public class IX_RighCleaner extends Application {
         k.addNode(remCat_hasIdBox);
         k.addNode(remCat_remIdBox);
         k.addNode(remCat_fromIdBox);
+        l.addNode(moveRg_srcFoldIdBox);
+        l.addNode(moveRg_invoiceIdBox);
+        l.addNode(moveRg_mandantIdBox);
+        l.addNode(moveRg_inheritBox);
+        l.addNode(moveRg_categoriesBox);
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox,runBox);
         tPane.getTabs().add(a);
         tPane.getTabs().add(b);
@@ -575,6 +619,7 @@ public class IX_RighCleaner extends Application {
         tPane.getTabs().add(i);
         tPane.getTabs().add(j);
         tPane.getTabs().add(k);
+        tPane.getTabs().add(l);
         SplitPane leftPane = new SplitPane(tPane,bottom);
         leftPane.setOrientation(Orientation.VERTICAL);
         SplitPane root = new SplitPane(leftPane,layout);

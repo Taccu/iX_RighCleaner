@@ -8,7 +8,7 @@
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="iX_RighCleaner.jar" size="78355" download="eager" />
+    <jar href="iX_RighCleaner.jar" size="82853" download="eager" />
     <jar href="lib\FastInfoset-1.2.12.jar" size="293863" download="eager" />
     <jar href="lib\commons-collections4-4.1.jar" size="751238" download="eager" />
     <jar href="lib\commons-io-2.6.jar" size="214788" download="eager" />
@@ -28,7 +28,7 @@
     <jar href="lib\policy-2.3.1.jar" size="158494" download="eager" />
     <jar href="lib\saaj-api-1.3.4.jar" size="24747" download="eager" />
     <jar href="lib\saaj-impl-1.3.20.jar" size="427999" download="eager" />
-    <jar href="lib\sqljdbc42.jar" size="891490" download="eager" />
+    <jar href="lib\sqljdbc.jar" size="1027849" download="eager" />
     <jar href="lib\stax-ex-1.7.1.jar" size="16655" download="eager" />
     <jar href="lib\streambuffer-1.5.1.jar" size="64332" download="eager" />
   </resources>

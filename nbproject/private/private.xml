@@ -5,8 +5,6 @@
         <group>
             <file>file:/C:/Projekte/iX_RighCleaner/src/ix_righcleaner/ContentServerTask.java</file>
             <file>file:/C:/Projekte/iX_RighCleaner/src/ix_righcleaner/UpdateObjectsWithTemplate.java</file>
-            <file>file:/C:/Projekte/iX_RighCleaner/src/ix_righcleaner/IX_RighCleaner.java</file>
-            <file>file:/C:/Projekte/iX_RighCleaner/src/ix_righcleaner/TriaScan.java</file>
             <file>file:/C:/Projekte/iX_RighCleaner/src/ix_righcleaner/SetCategoryToId.java</file>
             <file>file:/C:/Projekte/iX_RighCleaner/src/ix_righcleaner/CreateCategoryForCsv.java</file>
         </group>

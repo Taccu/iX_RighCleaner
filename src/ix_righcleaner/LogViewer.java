@@ -154,6 +154,7 @@ class LogView extends ListView<LogRecord> {
                         Duration.seconds(1),
                         event -> {
                             logger.getLog().drainTo(logItems);
+                            
 
                             if (logItems.size() > MAX_ENTRIES) {
                                 logItems.remove(0, logItems.size() - MAX_ENTRIES);

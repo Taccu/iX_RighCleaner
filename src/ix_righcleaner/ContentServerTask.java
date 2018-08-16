@@ -29,6 +29,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -308,6 +309,36 @@ public abstract class ContentServerTask extends Thread{
                 logger.info("Finished task " + getNameOfTask() + " with " + processedItems +" items in " + elapsedTime + " milliseconds...");
             } else {
                 logger.info("Finished task " + getNameOfTask() + " in " + elapsedTime + " milliseconds...");
+            }
+            List<LogRecord> arrayList = new ArrayList<>();
+            logger.getLog().drainTo(arrayList);
+            List<String> logList = new ArrayList<>();
+            arrayList.forEach((myLong) -> {
+                switch(myLong.getLevel()) {
+                    case DEBUG:
+                        logList.add("DEBUG:"+myLong.getMessage());
+                        break;
+                    case WARN:
+                        logList.add("WARN:"+myLong.getMessage());
+                        break;
+                    case INFO:
+                        logList.add("INFO:"+myLong.getMessage());
+                        break;
+                    case ERROR:
+                        logList.add("ERROR:"+myLong.getMessage());
+                        break;
+                    default:
+                        
+                }
+            });
+            try {
+                if(Files.exists(Paths.get("ix-right.log"))) {
+                    Files.delete(Paths.get("ix-right.log"));
+                }
+                Files.createFile(Paths.get("ix-right.log"));
+                Files.write(Paths.get("ix-right.log"),logList,Charset.defaultCharset(),StandardOpenOption.APPEND);
+            } catch (IOException ex) {
+                java.util.logging.Logger.getLogger(LogView.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
             }
         }
     }

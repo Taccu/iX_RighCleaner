@@ -44,7 +44,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField moveRg_srcFoldField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
@@ -64,6 +64,9 @@ public class IX_RighCleaner extends Application {
     
     private boolean checkMoveRgTab() {
         if(moveRg_invoiceField.getText() == null || moveRg_invoiceField.getText().isEmpty()){
+            return false;
+        }
+        if(moveRg_bpField.getText() == null || moveRg_bpField.getText().isEmpty()) {
             return false;
         }
         return moveRg_srcFoldField.getText() != null;
@@ -328,8 +331,13 @@ public class IX_RighCleaner extends Application {
                         if(!checkMoveRgTab()) {
                             return;
                         }
-                        MoveRechnungen move_1 = new MoveRechnungen(logger, userField.getText(), passField.getText(),Long.valueOf(moveRg_srcFoldField.getText()),Long.valueOf(moveRg_invoiceField.getText()),moveRg_inheritField.isSelected(),moveRg_categoriesField.isSelected(),moveRg_excludeCopyField.isSelected(),moveRg_clearClassField.isSelected(), exportField.isSelected());
+                        MoveRechnungen move_1 = new MoveRechnungen(logger, userField.getText(), passField.getText(),Long.valueOf(moveRg_srcFoldField.getText()),Long.valueOf(moveRg_invoiceField.getText()),moveRg_inheritField.isSelected(),moveRg_categoriesField.isSelected(),moveRg_excludeCopyField.isSelected(),moveRg_clearClassField.isSelected(),Long.valueOf(moveRg_bpField.getText()), exportField.isSelected());
                         tKeeper.addNewTask(move_1);
+                        break;
+                    case "Search for Objects with Classification":
+                        
+                        SearchForClassi searchClass_1 = new SearchForClassi(logger, userField.getText(), passField.getText(), 556887l , exportField.isSelected());
+                        tKeeper.addNewTask(searchClass_1);
                         break;
                     default:
                         logger.error("Something went wrong");
@@ -362,6 +370,7 @@ public class IX_RighCleaner extends Application {
                 remCat_fromIdField.clear();
                 moveRg_srcFoldField.clear();
                 moveRg_invoiceField.clear();
+                moveRg_bpField.clear();
                 //appl_inherit;
             }
         });
@@ -452,7 +461,9 @@ public class IX_RighCleaner extends Application {
         moveRg_categoriesField = new CheckBox();
         moveRg_excludeCopyField = new CheckBox();
         moveRg_clearClassField = new CheckBox();
+        moveRg_bpField = new TextField();
         
+        moveRg_bpField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         moveRg_invoiceField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         moveRg_srcFoldField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         remCat_fromIdField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -558,7 +569,8 @@ public class IX_RighCleaner extends Application {
         moveRg_excludeCopyBox.setPadding(new Insets(5,5,5,5));
         HBox moveRg_clearClassBox = new HBox(10, new Label("Clear classification on move"), moveRg_clearClassField);
         moveRg_clearClassBox.setPadding(new Insets(5,5,5,5));
-        
+        HBox moveRg_bpBox = new HBox(10, new Label("Business Partner Category ID"), moveRg_bpField);
+        moveRg_bpBox.setPadding(new Insets(5,5,5,5));
         
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
@@ -572,6 +584,7 @@ public class IX_RighCleaner extends Application {
         Container j = new Container("Assign Category to Node from XML");
         Container k = new Container("Remove Category based on folder");
         Container l = new Container("Move Rechnungen based on Category");
+        Container m = new Container("Search for Objects with Classification");
         a.addNode(depthBox);
         a.addNode(itemBox);
         a.addNode(partitionBox);
@@ -602,6 +615,7 @@ public class IX_RighCleaner extends Application {
         k.addNode(remCat_fromIdBox);
         l.addNode(moveRg_srcFoldIdBox);
         l.addNode(moveRg_invoiceIdBox);
+        l.addNode(moveRg_bpBox);
         l.addNode(moveRg_inheritBox);
         l.addNode(moveRg_categoriesBox);
         l.addNode(moveRg_excludeCopyBox);
@@ -619,6 +633,7 @@ public class IX_RighCleaner extends Application {
         tPane.getTabs().add(j);
         tPane.getTabs().add(k);
         tPane.getTabs().add(l);
+        tPane.getTabs().add(m);
         SplitPane leftPane = new SplitPane(tPane,bottom);
         leftPane.setOrientation(Orientation.VERTICAL);
         SplitPane root = new SplitPane(leftPane,layout);

@@ -119,7 +119,7 @@ class LogRecord {
 }
 
 class LogView extends ListView<LogRecord> {
-    private static final int MAX_ENTRIES = 10_000;
+    private static final int MAX_ENTRIES = 10_000_000_00;
 
     private final static PseudoClass debug = PseudoClass.getPseudoClass("debug");
     private final static PseudoClass info  = PseudoClass.getPseudoClass("info");

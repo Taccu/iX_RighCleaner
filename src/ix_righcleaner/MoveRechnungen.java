@@ -59,12 +59,11 @@ public class MoveRechnungen extends ContentServerTask{
         options.setMaxDepth(Integer.MAX_VALUE);
         options.setMaxResults(Integer.MAX_VALUE);
         List<Node> nodesInSourceFolder = docManClient.getNodesInContainer(sourceFolderId, options);
-        try {
         SearchService searchClient = getSearchClient();
         int i = 0;
         for(Node currentNode : docManClient.getNodes(getNodesBySearch(searchClient))) {
             i++;
-            if(i%20==0) docManClient = getDocManClient(true);
+            if(i%200==0) docManClient = getDocManClient(true);
             AdvancedNode workspace = new AdvancedNode();
             workspace.setNode(currentNode);
             if(currentNode.getType().equals("EcmWorkspace")) {
@@ -80,7 +79,7 @@ public class MoveRechnungen extends ContentServerTask{
                                     if(str_Value.getDescription().equals("Type")) {
                                         workspace.setType(string);
                                     }
-                                    if(str_Value.getDescription().equals("Business Partner Name")) {
+                                    if(str_Value.getDescription().equals("BusinessPartnerName")) {
                                         workspace.setbPartner(string);
                                     }
                                 }
@@ -106,9 +105,8 @@ public class MoveRechnungen extends ContentServerTask{
                 
             }
         }
-        }catch(Exception e) {e.printStackTrace();}
+        i = 0;
         for(Node node : nodesInSourceFolder) {
-            int i = 0;
             i++;
             if(i%10==0)docManClient = getDocManClient(true);
             boolean lookForCopyFolder;
@@ -132,7 +130,6 @@ public class MoveRechnungen extends ContentServerTask{
                     continue;
                 }
             }
-            try {
             for(AttributeGroup group : data.getAttributeGroups()) {
                 if(group.getKey().startsWith(String.valueOf(invoiceId))) {
                     logger.debug(node.getName() + "(id:" + node.getID() + ") found category " + invoiceId + "...");
@@ -163,28 +160,49 @@ public class MoveRechnungen extends ContentServerTask{
                     }
                 }
             }
-            for(AdvancedNode workspace : B_WORKSPACES) {
-                if(lookForCopyFolder) {
-                    if(workspace.getType()!=null && workspace.getType().equalsIgnoreCase("Pharmacy")) {
-                        if((workspace.getCostCenter() != null && workspace.getCostCenter().equals(kostId)) && workspace.getMandant().equals(mandantName)) {
-                            destination = workspace.getNode();
-                        }
-                    }
-                }
-                else {
-                    if((workspace.getbPartner()!=null && workspace.getbPartner().equals(bpName)) && workspace.getMandant().equals(mandantName)) {
-                        destination = workspace.getNode();
-                    }
-                }
-            } }
-            catch(Exception ex){ex.printStackTrace();}
+            destination = getWorkspace(docManClient, lookForCopyFolder, kostId, bpName, mandantName);
             if(destination == null) {
-                logger.warn("Couldn't find destination folder for " + node.getName() + "(id:" + node.getID() + ")");
+                if(!bpName.isEmpty())logger.warn("Couldn't find the Accounting folder in Bussiness Partner for " + node.getName() + "(id:" + node.getID() + "). Was looking in Mandant " + mandantName + " for BP " + bpName);
+                if(!kostId.isEmpty())logger.warn("Couldn't find the Accounting folder in Pharmacy for " + node.getName() + "(id:" + node.getID() + "). Was looking in Mandant " + mandantName + " for PharmacyId " + kostId);
                 continue;
             }
             move(node, destination, docManClient, getClassifyClient());
         }
     }
+    
+    private Node getWorkspace(DocumentManagement docManClient, boolean lookForCopyFolder, String kostId, String bpName, String mandantName) {
+        for(AdvancedNode workspace : B_WORKSPACES) {
+            Node node = workspace.getNode();
+                if(lookForCopyFolder) {
+                    if(workspace.getType()!=null && workspace.getType().equalsIgnoreCase("Pharmacy")) {
+                        if((workspace.getCostCenter() != null && workspace.getCostCenter().equals(kostId)) && workspace.getMandant().equals(mandantName)) {
+                            return findAccounting(docManClient, node);
+                        }
+                    }
+                }
+                else {
+                    if((workspace.getbPartner()!=null && workspace.getbPartner().equals(bpName)) && workspace.getMandant().equals(mandantName)) {
+                        return findAccounting(docManClient, node);
+                    }
+                }
+            }
+        return null;
+    }
+    
+    private Node findAccounting( DocumentManagement docManClient, Node node) {
+        GetNodesInContainerOptions options = new GetNodesInContainerOptions();
+        options.setMaxDepth(1);
+        options.setMaxResults(Integer.MAX_VALUE);
+        List<Node> nodesInBP = docManClient.getNodesInContainer(node.getID(), options);
+        for(Node nodeInBP : nodesInBP) {
+            if(nodeInBP.isIsContainer() && nodeInBP.getName().equals("Accounting")) {
+                logger.debug("Accounting Ordner in " + node.getName() + "(id:"+node.getID() + ") gefunden");
+                return nodeInBP;
+            }
+        }
+        return null;
+    }
+            
     private void move(Node node, Node destination, DocumentManagement docManClient, Classifications classifyClient) {
         if(clearClassifcations) {
             boolean unClassify = classifyClient.unClassify(node.getID());
@@ -204,7 +222,7 @@ public class MoveRechnungen extends ContentServerTask{
         else{
             moveOptions.setAttrSourceType(AttributeSourceType.ORIGINAL);
         }
-        //docManClient.moveNode(node.getID(), destination.getID(), node.getName(), moveOptions);
+        docManClient.moveNode(node.getID(), destination.getID(), node.getName(), moveOptions);
     } 
     public List<Long> getNodesBySearch(SearchService sService){
         SingleSearchRequest query = new SingleSearchRequest();

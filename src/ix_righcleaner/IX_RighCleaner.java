@@ -44,7 +44,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
@@ -67,6 +67,9 @@ public class IX_RighCleaner extends Application {
             return false;
         }
         if(moveRg_bpField.getText() == null || moveRg_bpField.getText().isEmpty()) {
+            return false;
+        }
+        if(moveRg_mandantField.getText() == null || moveRg_mandantField.getText().isEmpty()) {
             return false;
         }
         return moveRg_srcFoldField.getText() != null;
@@ -331,7 +334,7 @@ public class IX_RighCleaner extends Application {
                         if(!checkMoveRgTab()) {
                             return;
                         }
-                        MoveRechnungen move_1 = new MoveRechnungen(logger, userField.getText(), passField.getText(),Long.valueOf(moveRg_srcFoldField.getText()),Long.valueOf(moveRg_invoiceField.getText()),moveRg_inheritField.isSelected(),moveRg_categoriesField.isSelected(),moveRg_excludeCopyField.isSelected(),moveRg_clearClassField.isSelected(),Long.valueOf(moveRg_bpField.getText()), exportField.isSelected());
+                        MoveRechnungen move_1 = new MoveRechnungen(logger, userField.getText(), passField.getText(),Long.valueOf(moveRg_srcFoldField.getText()),Long.valueOf(moveRg_invoiceField.getText()),moveRg_inheritField.isSelected(),moveRg_categoriesField.isSelected(),moveRg_excludeCopyField.isSelected(),moveRg_clearClassField.isSelected(),Long.valueOf(moveRg_bpField.getText()), Long.valueOf(moveRg_mandantField.getText()), exportField.isSelected());
                         tKeeper.addNewTask(move_1);
                         break;
                     case "Search for Objects with Classification":
@@ -462,7 +465,9 @@ public class IX_RighCleaner extends Application {
         moveRg_excludeCopyField = new CheckBox();
         moveRg_clearClassField = new CheckBox();
         moveRg_bpField = new TextField();
+        moveRg_mandantField = new TextField();
         
+        moveRg_mandantField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         moveRg_bpField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         moveRg_invoiceField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         moveRg_srcFoldField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -571,6 +576,9 @@ public class IX_RighCleaner extends Application {
         moveRg_clearClassBox.setPadding(new Insets(5,5,5,5));
         HBox moveRg_bpBox = new HBox(10, new Label("Business Partner Category ID"), moveRg_bpField);
         moveRg_bpBox.setPadding(new Insets(5,5,5,5));
+        HBox moveRg_mandantBox = new HBox(10, new Label("Mandant Category ID"), moveRg_mandantField);
+        moveRg_mandantBox.setPadding(new Insets(5,5,5,5));
+        
         
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
@@ -616,10 +624,12 @@ public class IX_RighCleaner extends Application {
         l.addNode(moveRg_srcFoldIdBox);
         l.addNode(moveRg_invoiceIdBox);
         l.addNode(moveRg_bpBox);
+        l.addNode(moveRg_mandantBox);
         l.addNode(moveRg_inheritBox);
         l.addNode(moveRg_categoriesBox);
         l.addNode(moveRg_excludeCopyBox);
         l.addNode(moveRg_clearClassBox);
+        
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox,runBox);
         tPane.getTabs().add(a);
         tPane.getTabs().add(b);

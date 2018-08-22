@@ -19,7 +19,9 @@ import com.opentext.livelink.service.searchservices.SearchService;
 import com.opentext.livelink.service.searchservices.SingleSearchRequest;
 import com.opentext.livelink.service.searchservices.SingleSearchResponse;
 import static ix_righcleaner.ContentServerTask.SEARCH_API;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import javafx.beans.property.SimpleStringProperty;
@@ -48,7 +50,7 @@ public class MoveRechnungen extends ContentServerTask{
 
     @Override
     public String getNameOfTask() {
-        return "Move-Rechnungen";
+        return "Move-Rechnungen_" + String.valueOf(new SimpleDateFormat("yyyy-MM-dd_hhmm").format(new Date()));
     }
 
     @Override
@@ -61,10 +63,11 @@ public class MoveRechnungen extends ContentServerTask{
                 .forEach(currentNode -> {
                     AdvancedNode workspace = new AdvancedNode();
                     workspace.setNode(currentNode);
-                    System.out.println(currentNode.getName());
-                    currentNode.getMetadata().getAttributeGroups()
+                    currentNode
+                            .getMetadata()
+                            .getAttributeGroups()
                             .parallelStream()
-                            .filter(group -> (group.getKey().startsWith(String.valueOf(bpId)) || group.getKey().startsWith(String.valueOf(mandantId))))
+                            .filter(group -> group.getKey().startsWith(String.valueOf(bpId)) | group.getKey().startsWith(String.valueOf(mandantId)))
                             .forEach(group -> {
                                 group.getValues()
                                         .parallelStream()
@@ -86,12 +89,14 @@ public class MoveRechnungen extends ContentServerTask{
                                                                 workspace.setbPartner(attribute);
                                                                 break;
                                                             case "Mandant":
-                                                            workspace.setMandant(attribute);
+                                                                workspace.setMandant(attribute);
+                                                                break;
                                                             default:
-                                                        }                                                            
+                                                        }
                                                     });
                                         });
                             });
+                    System.out.println(workspace.getNode().getName()+":"+workspace.getMandant());
                     B_WORKSPACES.add(workspace);
         });
         } catch(Exception ex) {ex.printStackTrace();}

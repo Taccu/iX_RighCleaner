@@ -337,7 +337,7 @@ public abstract class ContentServerTask extends Thread{
                 }
                 Files.createFile(Paths.get("ix-right.log"));
                 
-                Files.write(Paths.get("ix-right.log"),logList,Charset.defaultCharset(), StandardOpenOption.APPEND);
+                Files.write(Paths.get("ix-right.log"),logList,Charset.forName("UTF-8"), StandardOpenOption.APPEND);
             } catch (IOException ex) {
                 java.util.logging.Logger.getLogger(LogView.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
             }

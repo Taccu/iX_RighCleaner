@@ -61,7 +61,7 @@ public class MoveRechnungen extends ContentServerTask{
                 .parallelStream()
                 .filter(currentNode -> currentNode.getType().equals("EcmWorkspace"))
                 .forEach(currentNode -> {
-                    AdvancedNode workspace = new AdvancedNode();
+                    final AdvancedNode workspace = new AdvancedNode();
                     workspace.setNode(currentNode);
                     currentNode
                             .getMetadata()
@@ -69,12 +69,15 @@ public class MoveRechnungen extends ContentServerTask{
                             .parallelStream()
                             .filter(group -> group.getKey().startsWith(String.valueOf(bpId)) | group.getKey().startsWith(String.valueOf(mandantId)))
                             .forEach(group -> {
+                                System.out.println("Key matched " + bpId +" or " + mandantId);
                                 group.getValues()
                                         .parallelStream()
                                         .filter(value -> value instanceof StringValue)
                                         .forEach(value -> {
+                                            System.out.println("StringValue");
                                             ((StringValue) value).getValues()
                                                     .forEach(attribute -> {
+                                                        System.out.println("Holding this attribute " + attribute);
                                                         switch(attribute){
                                                             case "Cost Center":
                                                                 workspace.setCostCenter(attribute);
@@ -90,6 +93,7 @@ public class MoveRechnungen extends ContentServerTask{
                                                                 break;
                                                             case "Mandant":
                                                                 workspace.setMandant(attribute);
+                                                                System.out.println("Setting mandant to " + workspace.getNode().getName());
                                                                 break;
                                                             default:
                                                         }

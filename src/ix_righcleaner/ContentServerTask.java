@@ -193,7 +193,7 @@ public abstract class ContentServerTask extends Thread{
     }
     public static void writeArrayToPath(List<Long> list, Path path) throws IOException {
         List<String> arrayList = new ArrayList<>(list.size());
-        list.forEach((myLong) -> {
+        list.stream().forEach((myLong) -> {
             arrayList.add(String.valueOf(myLong));
         });
         Files.write(path,arrayList,Charset.defaultCharset());
@@ -313,7 +313,7 @@ public abstract class ContentServerTask extends Thread{
             List<LogRecord> arrayList = new ArrayList<>();
             logger.getLog().drainCopyTo(arrayList);
             List<String> logList = new ArrayList<>();
-            arrayList.forEach((myLong) -> {
+            arrayList.stream().forEach((myLong) -> {
                 switch(myLong.getLevel()) {
                     case DEBUG:
                         logList.add("DEBUG:"+myLong.getMessage());

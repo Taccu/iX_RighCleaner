@@ -134,7 +134,7 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
         }
         
         ObservableList<NodeItem> data = FXCollections.observableArrayList();
-        foundMatchingNodes.forEach(data::add);
+        foundMatchingNodes.stream().forEach(data::add);
         FilteredList<NodeItem> filteredData = new FilteredList<>(data, s -> true);
         final FutureTask query = new FutureTask(new Callable() {
             @Override
@@ -149,7 +149,7 @@ public class UpdateObjectsWithTemplate extends ContentServerTask{
                 grid.setHgap(10);
                 grid.setVgap(10);
                 grid.setPadding(new Insets(20, 150, 10, 10));
-                filteredData.forEach((node) -> {
+                filteredData.stream().forEach((node) -> {
                     if(node.getName().matches("[A-Z]{3}[0-9]{3}$")){
                         
                     }else {

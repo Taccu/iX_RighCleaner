@@ -8,7 +8,7 @@
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="iX_RighCleaner.jar" size="98400" download="eager" />
+    <jar href="iX_RighCleaner.jar" size="101148" download="eager" />
     <jar href="lib\FastInfoset-1.2.12.jar" size="293863" download="eager" />
     <jar href="lib\commons-collections4-4.1.jar" size="751238" download="eager" />
     <jar href="lib\commons-io-2.6.jar" size="214788" download="eager" />
@@ -32,9 +32,6 @@
     <jar href="lib\stax-ex-1.7.1.jar" size="16655" download="eager" />
     <jar href="lib\streambuffer-1.5.1.jar" size="64332" download="eager" />
   </resources>
-  <applet-desc  width="800" height="600" main-class="com.javafx.main.NoJavaFXFallback"  name="iX_RighCleaner" >
-    <param name="requiredFXVersion" value="8.0+"/>
-  </applet-desc>
   <jfx:javafx-desc  width="800" height="600" main-class="ix_righcleaner.IX_RighCleaner"  name="iX_RighCleaner" />
   <update check="always"/>
 </jnlp>

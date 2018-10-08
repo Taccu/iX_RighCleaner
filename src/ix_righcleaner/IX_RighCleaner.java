@@ -342,6 +342,10 @@ public class IX_RighCleaner extends Application {
                         SearchForClassi searchClass_1 = new SearchForClassi(logger, userField.getText(), passField.getText(), 556887l , exportField.isSelected());
                         tKeeper.addNewTask(searchClass_1);
                         break;
+                    case "Check Rights":
+                        ControlRights cRights_1 = new ControlRights(logger, userField.getText(), passField.getText(), exportField.isSelected());
+                        tKeeper.addNewTask(cRights_1);
+                        break;
                     default:
                         logger.error("Something went wrong");
                 }
@@ -593,6 +597,7 @@ public class IX_RighCleaner extends Application {
         Container k = new Container("Remove Category based on folder");
         Container l = new Container("Move Rechnungen based on Category");
         Container m = new Container("Search for Objects with Classification");
+        Container n = new Container("Check Rights");
         a.addNode(depthBox);
         a.addNode(itemBox);
         a.addNode(partitionBox);
@@ -644,6 +649,7 @@ public class IX_RighCleaner extends Application {
         tPane.getTabs().add(k);
         tPane.getTabs().add(l);
         tPane.getTabs().add(m);
+        tPane.getTabs().add(n);
         SplitPane leftPane = new SplitPane(tPane,bottom);
         leftPane.setOrientation(Orientation.VERTICAL);
         SplitPane root = new SplitPane(leftPane,layout);

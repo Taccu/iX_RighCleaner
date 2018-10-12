@@ -205,7 +205,7 @@ public class Updater extends ContentServerTask{
             //don't
             long stopTime = System.currentTimeMillis();
             long elapsedTime = stopTime - startTime;
-            logger.info("Partition has updated items in basefolder "+ folderIds.get(0) + "in " + elapsedTime + " milliseconds...");
+            logger.info("Partition has updated items in basefolder "+ folderIds.get(0) + " in " + elapsedTime + " milliseconds...");
             return processedIds;
         }
     }

@@ -105,7 +105,33 @@ public class MoveRechnungen extends ContentServerTask{
                 
             }
         }
-        i = 0;
+        oldMove(nodesInSourceFolder, docManClient);
+    }
+    
+    private void newMove(List<Node> nodesInSourceFolder, DocumentManagement docManClient) {
+        if(!excludeCopies)nodesInSourceFolder.stream().filter(a -> a.getName().matches("(?i:.*(copy).*)"))
+                .parallel().forEach(node -> {
+                    node.getMetadata().getAttributeGroups().stream().filter(a -> a.getKey().startsWith(String.valueOf(invoiceId)))
+                            .forEach(
+                            values -> values.getValues().stream().forEach(value -> {
+                                
+                            })
+                            );
+                });
+        
+        nodesInSourceFolder.stream().filter(a -> !a.getName().matches("(?i:.*(copy).*)"))
+                .parallel().forEach(node -> {
+                node.getMetadata().getAttributeGroups().stream().filter(a -> a.getKey().startsWith(String.valueOf(invoiceId)))
+                            .forEach(
+                            values -> values.getValues().stream().forEach(value -> {
+                                
+                            })
+                            );
+                 });
+    }
+    
+    private void oldMove(List<Node> nodesInSourceFolder, DocumentManagement docManClient) {
+        int i = 0;
         for(Node node : nodesInSourceFolder) {
             i++;
             if(i%10==0)docManClient = getDocManClient(true);
@@ -169,6 +195,7 @@ public class MoveRechnungen extends ContentServerTask{
             move(node, destination, docManClient, getClassifyClient());
         }
     }
+    
     
     private Node getWorkspace(DocumentManagement docManClient, boolean lookForCopyFolder, String kostId, String bpName, String mandantName) {
         for(AdvancedNode workspace : B_WORKSPACES) {

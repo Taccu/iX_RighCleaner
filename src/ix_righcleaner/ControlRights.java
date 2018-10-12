@@ -27,10 +27,12 @@ public class ControlRights extends ContentServerTask {
         
     }
     
+    @Override
     public String getNameOfTask() {
         return "Control-Rights";
     }
     
+    @Override
     public void doWork() {
         DocumentManagement docManClient = getDocManClient();
         GetNodesInContainerOptions options = new GetNodesInContainerOptions();
@@ -66,5 +68,4 @@ public class ControlRights extends ContentServerTask {
             return objectPerm;
         }
     }
-    
 }

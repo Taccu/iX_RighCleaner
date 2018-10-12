@@ -44,7 +44,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField updater_DBServerField, updater_DBNameField,moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
@@ -146,6 +146,12 @@ public class IX_RighCleaner extends Application {
                 return false;
             }
         }
+        if(updater_DBServerField.getText() == null || updater_DBServerField.getText().isEmpty()) {
+            return false;
+        }
+        if(updater_DBNameField.getText() == null || updater_DBNameField.getText().isEmpty()) {
+            return false;
+        }
         if(depthField.getText() == null || depthField.getText().isEmpty()) {
             return false;
         }
@@ -222,7 +228,7 @@ public class IX_RighCleaner extends Application {
                         for(String string : stringList ) {
                             folderIds.add(Long.valueOf(string));                    
                         }
-                        Updater updater_1 = new Updater(logger, userField.getText(),passField.getText(), Integer.valueOf(itemField.getText()), Integer.valueOf(depthField.getText()), Integer.valueOf(partitionField.getText()) ,groupField.getText(), folderIds, exportField.isSelected());
+                        Updater updater_1 = new Updater(logger, userField.getText(),passField.getText(), Integer.valueOf(itemField.getText()), Integer.valueOf(depthField.getText()), Integer.valueOf(partitionField.getText()) ,groupField.getText(), folderIds, updater_DBServerField.getText(), updater_DBNameField.getText(), exportField.isSelected());
                         tKeeper.addNewTask(updater_1);
                         break;
                     case "Update with Item ID":
@@ -378,6 +384,8 @@ public class IX_RighCleaner extends Application {
                 moveRg_srcFoldField.clear();
                 moveRg_invoiceField.clear();
                 moveRg_bpField.clear();
+                updater_DBServerField.clear();
+                updater_DBNameField.clear();
                 //appl_inherit;
             }
         });
@@ -470,6 +478,9 @@ public class IX_RighCleaner extends Application {
         moveRg_clearClassField = new CheckBox();
         moveRg_bpField = new TextField();
         moveRg_mandantField = new TextField();
+        updater_DBServerField = new TextField();
+        updater_DBNameField = new TextField();
+        
         
         moveRg_mandantField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         moveRg_bpField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -501,6 +512,11 @@ public class IX_RighCleaner extends Application {
         sizeBox.setPadding(new Insets(5,5,5,5));
         HBox dataIdBox = new HBox(10,new Label("Data Ids"), dataIdField);
         dataIdBox.setPadding(new Insets(5,5,5,5));
+        HBox up_dbServerBox = new HBox(10, new Label("DB Server"), updater_DBServerField);
+        up_dbServerBox.setPadding(new Insets(5,5,5,5));
+        HBox up_dbNameBox = new HBox(10, new Label("DB Name"), updater_DBNameField);
+        up_dbNameBox.setPadding(new Insets(5,5,5,5));
+        
         HBox groupBox = new HBox(10,new Label("Group to Remove") ,groupField);
         groupBox.setPadding(new Insets(5,5,5,5));
         HBox partitionBox = new HBox(10,new Label("Partition size") ,partitionField);
@@ -602,6 +618,8 @@ public class IX_RighCleaner extends Application {
         a.addNode(itemBox);
         a.addNode(partitionBox);
         a.addNode(sizeBox);
+        a.addNode(up_dbServerBox);
+        a.addNode(up_dbNameBox);
         b.addNode(folderPermBox);
         c.addNode(dataIdBox);
         c.addNode(exportParentBox);

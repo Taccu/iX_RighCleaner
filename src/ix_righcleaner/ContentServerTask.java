@@ -20,8 +20,13 @@ import com.opentext.livelink.service.docman.RightOperation;
 import com.opentext.livelink.service.docman.RightPropagation;
 import com.opentext.livelink.service.memberservice.MemberService;
 import com.opentext.livelink.service.memberservice.MemberService_Service;
+import com.opentext.livelink.service.searchservices.DataBagType;
+import com.opentext.livelink.service.searchservices.SGraph;
+import com.opentext.livelink.service.searchservices.SResultPage;
 import com.opentext.livelink.service.searchservices.SearchService;
 import com.opentext.livelink.service.searchservices.SearchService_Service;
+import com.opentext.livelink.service.searchservices.SingleSearchRequest;
+import com.opentext.livelink.service.searchservices.SingleSearchResponse;
 import com.sun.xml.ws.api.message.Headers;
 import com.sun.xml.ws.developer.WSBindingProvider;
 import java.io.IOException;
@@ -207,6 +212,7 @@ public abstract class ContentServerTask extends Thread{
             SOAPHeaderElement header;
             header = generateSOAPHeaderElement(loginUserWithPassword(user, password));
             ((WSBindingProvider) docManClient).setOutboundHeaders(Headers.create(header));
+            //((BindingProvider) docManClient).getRequestContext().put("javax.xml.ws.client.receiveTimeout", "1000000");
             return docManClient;
         }
         catch(Exception e) {
@@ -274,6 +280,42 @@ public abstract class ContentServerTask extends Thread{
             handleError(e);
         }
         return null;
+    }
+    
+        
+    public List<Long> getNodesBySearch(SearchService sService, String queryString){
+        SingleSearchRequest query = new SingleSearchRequest();
+        List<String> dataCollections = sService.getDataCollections();
+        query.setDataCollectionSpec("'LES Enterprise'");
+        query.setQueryLanguage(SEARCH_API);
+        query.setFirstResultToRetrieve(1);
+        query.setNumResultsToRetrieve(500000);
+        query.setResultSetSpec(queryString);
+        query.setResultOrderSpec("sortByRegion=OTCreatedBy");
+        query.getResultTransformationSpec().add("OTName");
+        query.getResultTransformationSpec().add("OTLocation");
+        
+        SingleSearchResponse results = sService.search(query, "");
+        SResultPage srp= results.getResults();
+        List<SGraph> sra = results.getResultAnalysis();
+        ArrayList<Long> nodes = new ArrayList<>();
+        
+        if(srp != null) {
+            List<SGraph> items = srp.getItem();
+            List<DataBagType> types = srp.getType();
+            
+            if(items != null && types != null && items.size() > 0) {
+                for(SGraph item : items) {
+                    String extractId = extractId(item.getID());
+                    nodes.add(Long.valueOf(extractId));
+                }
+            }
+        }
+       return nodes;
+    }
+    
+    private String extractId(String string){
+        return string.replaceAll("(.*)DataId=", "").replaceAll("&(.*)", "");
     }
     
     

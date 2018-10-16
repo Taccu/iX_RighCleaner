@@ -96,6 +96,7 @@ public abstract class ContentServerTask extends Thread{
    
     
     protected void connectToDatabase(String server, String db) throws ClassNotFoundException, SQLException {
+        if(CONNECTION != null && CONNECTION.isValid(10)) return;
         URL = "jdbc:sqlserver://"+server +";databaseName=" +db+";integratedSecurity=true";
         Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
         CONNECTION = DriverManager.getConnection(URL);
@@ -136,11 +137,6 @@ public abstract class ContentServerTask extends Thread{
                     ")\n" +
                     "SELECT DataID FROM DCTE;");
         ps.setLong(1, baseId);
-       /* Long[] longs = new Long[subTypes.size()];
-        longs = subTypes.toArray(longs);
-        Array array = CONNECTION.createArrayOf("int", longs);
-        ps.setArray(2, array);
-        ps.setArray(3, array);*/
         try {
             ResultSet rs = ps.executeQuery();
             while(rs.next()) {
@@ -151,6 +147,7 @@ public abstract class ContentServerTask extends Thread{
             logger.error(ex.getMessage());
         } finally {
             ps.close();
+            CONNECTION.close();
         }
         return dataIds;
     }
@@ -405,6 +402,7 @@ public abstract class ContentServerTask extends Thread{
             } else {
                 logger.info("Finished task " + getNameOfTask() + " in " + elapsedTime + " milliseconds...");
             }
+            /*
             List<LogRecord> arrayList = new ArrayList<>();
             logger.getLog().drainCopyTo(arrayList);
             List<String> logList = new ArrayList<>();
@@ -436,6 +434,7 @@ public abstract class ContentServerTask extends Thread{
             } catch (IOException ex) {
                 java.util.logging.Logger.getLogger(LogView.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
             }
+            */
         }
     }
     

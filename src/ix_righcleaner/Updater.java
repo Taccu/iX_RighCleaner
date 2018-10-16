@@ -12,6 +12,7 @@ import com.opentext.livelink.service.docman.NodeRights;
 import com.opentext.livelink.service.memberservice.Member;
 import com.opentext.livelink.service.memberservice.MemberService;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,19 +41,8 @@ public class Updater extends ContentServerTask{
     private final Integer partitonSize;
     private final ArrayList<Long> folderIds;
     private ExecutorService executor;
-    /*private final String sql = "WITH DCTE AS\n" +
-"(\n" +
-"SELECT DataID,ParentID,Name\n" +
-"FROM csadmin.DTree\n" +
-"WHERE DataID = ?\n" +
-"AND SubType IN (0,144,848)\n" +
-"UNION ALL\n" +
-"SELECT dt.DataID, dt.ParentID, dt.Name\n" +
-"FROM csadmin.DTree dt\n" +
-"INNER JOIN DCTE s ON dt.ParentID = s.DataID\n" +
-"WHERE SubType IN (0,144, 848)\n" +
-")\n" +
-"SELECT DataID FROM DCTE;"; */
+    private final ConcurrentHashMap<Long,Member> members = new ConcurrentHashMap<>();
+    private final DecimalFormat df = new DecimalFormat("0.00##");
     
     public Updater(Logger logger,String user, String password, boolean debug,Integer partitonSize,String group, ArrayList<Long> folderIds, String dbServer, String dbName, boolean export) {
         super(logger, user , password, export);
@@ -79,7 +69,6 @@ public class Updater extends ContentServerTask{
             logger.debug("Found basenode:" +baseNode.getName() +"(id:" + baseNode.getID() + ")");
             //Rest of children
             logger.info("Calculating number of items...");
-            //docManClient.listNodes(baseId, false);
             List<Long> subTypes = new ArrayList<>();
             subTypes.add(0l);
             subTypes.add(144l);
@@ -93,18 +82,23 @@ public class Updater extends ContentServerTask{
                     new ExecutorCompletionService<>(executor);
             partitions.stream().parallel().forEach(partition -> {
                 logger.info("Creating new parition thread with " +partition.size());
-                completionService.submit(new UpdateNodes(partition,debug));
+                completionService.submit(new UpdateNodes(partition,debug,members));
             });
-
+            
+            //Help with gc
+            int partitionCount = partitions.size();
+            nodesInContainer = null;
+            partitions = null;
+            
             int received = 0;
             boolean erros = false;
-            while(received < partitions.size() && !erros) {
+            while(received < partitionCount && !erros) {
                 try {
                     Future<List<Long>> resultFuture = completionService.take();
                     exportIds.addAll(resultFuture.get());
                     received ++;
-                    logger.info("Document remaining: " + partitonSize*(partitions.size()-received) + "...");
-                    logger.info("Completed " + received + "/" + partitions.size() +" partitons: " + (100.00 * received/ partitions.size()) + "%...");
+                    logger.info("Document remaining: " + partitonSize*(partitionCount-received) + "...");
+                    logger.info("Completed " + received + "/" + partitionCount +" partitons: " + df.format((100.00 * received/ partitionCount)) + "%...");
                 } catch(Exception e) {
                     logger.error(e.getMessage());
                     erros = true;
@@ -129,11 +123,12 @@ public class Updater extends ContentServerTask{
     class UpdateNodes implements Callable<List<Long>>{
         private final List<Long> partition;
         private final List<Long> processedIds = new ArrayList<>();
-        private final ConcurrentHashMap<Long,Member> members = new ConcurrentHashMap<>();
         private final boolean debug;
-        public UpdateNodes(List<Long> partition, boolean debug ) {
+        private final ConcurrentHashMap<Long,Member> members;
+        public UpdateNodes(List<Long> partition, boolean debug, ConcurrentHashMap<Long,Member>  members ) {
             this.partition = partition;
             this.debug = debug;
+            this.members = members;
         }
 
         @Override
@@ -141,7 +136,7 @@ public class Updater extends ContentServerTask{
             MemberService msClient = getMsClient();
             long startTime = System.currentTimeMillis();
             DocumentManagement docManClient = getDocManClient(true);
-            new_ProcessIds(docManClient, msClient);
+            processIds(docManClient, msClient);
             //don't
             long stopTime = System.currentTimeMillis();
             long elapsedTime = stopTime - startTime;
@@ -149,7 +144,7 @@ public class Updater extends ContentServerTask{
             return processedIds;
         }
         
-        private void new_ProcessIds(DocumentManagement docManClient, MemberService msClient) {
+        private void processIds(DocumentManagement docManClient, MemberService msClient) {
             partition.stream().parallel()
                     .forEach(nodeId -> {
                         Node node = docManClient.getNode(nodeId);
@@ -157,10 +152,12 @@ public class Updater extends ContentServerTask{
                         
                         docManClient.getNodeRights(node.getID()).getACLRights().stream()
                                 .forEach(right -> {
+                                    //Just not to consume too much ressources, we are saving the 
                                     Member rightOwner = getOrAddMaybe(msClient,right.getRightID());
                                     logger.debug("Processing item " + node.getName() + "(id:" + node.getID() + ")" + ": current right entry:" + rightOwner.getName() + "(id:" +right.getRightID() + ")");
+                                    //Removing grp if all grps have to be removed (empty Field) or if the grp name matches the provided grp name
                                     if(group.isEmpty() || group.equals(rightOwner.getName())) {
-                                        removeNodeRight(docManClient,msClient, rightOwner,node, right,debug);
+                                        removeNodeRight(docManClient, rightOwner,node, right,debug);
                                     }
                                 });
                     
@@ -173,8 +170,8 @@ public class Updater extends ContentServerTask{
            return getOrAddMaybe(msClient, rightId);
         }
         
-        private void removeNodeRight(DocumentManagement docManClient, MemberService msClient, Member rightOwner, Node node, NodeRight right, boolean debug) {
-            logger.info("Removing "+ rightOwner.getName() +"(id:" + right.getRightID() + ")" + " from " +node.getName() +"(id:" + node.getID() + ")");
+        private void removeNodeRight(DocumentManagement docManClient, Member rightOwner, Node node, NodeRight right, boolean debug) {
+            logger.debug("Removing "+ rightOwner.getName() +"(id:" + right.getRightID() + ")" + " from " +node.getName() +"(id:" + node.getID() + ")");
             if(!debug)docManClient.removeNodeRight(node.getID(), right);
             processedIds.add(node.getID());
         }

@@ -20,29 +20,26 @@ import javafx.collections.transformation.FilteredList;
 import javafx.css.PseudoClass;
 import javafx.scene.control.*;
 import javafx.util.Duration;
-
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
 class Log {
     private static final int MAX_LOG_ENTRIES = 2_000_000_000;
-    private final List<LogRecord> copyLog = new ArrayList<>();
+    //private final List<LogRecord> copyLog = new ArrayList<>();
     private final BlockingDeque<LogRecord> log = new LinkedBlockingDeque<>(MAX_LOG_ENTRIES);
 
     public void drainTo(Collection<? super LogRecord> collection) {
-        copyTo(copyLog);
+        //copyTo(copyLog);
         log.drainTo(collection);
     }
 
-    public void drainCopyTo(Collection<? super LogRecord> collection) {
+    /*public void drainCopyTo(Collection<? super LogRecord> collection) {
         collection.addAll(copyLog);
-    }
+    }*/
     public void copyTo(Collection<? super LogRecord> collection){
         collection.addAll(log);
     }

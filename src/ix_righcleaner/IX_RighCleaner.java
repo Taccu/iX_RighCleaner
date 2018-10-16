@@ -48,7 +48,7 @@ public class IX_RighCleaner extends Application {
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
-    private CheckBox moveRg_clearClassField,moveRg_excludeCopyField,moveRg_categoriesField,moveRg_inheritField,obTemp_inheritField, exportField, exportParentField, appl_inherit;
+    private CheckBox debugField,moveRg_clearClassField,moveRg_excludeCopyField,moveRg_categoriesField,moveRg_inheritField,obTemp_inheritField, exportField, exportParentField, appl_inherit;
     private final TabPane tPane = new TabPane();
     private TaskKeeper tKeeper;
     private boolean checkGlobalFields() {
@@ -152,16 +152,7 @@ public class IX_RighCleaner extends Application {
         if(updater_DBNameField.getText() == null || updater_DBNameField.getText().isEmpty()) {
             return false;
         }
-        if(depthField.getText() == null || depthField.getText().isEmpty()) {
-            return false;
-        }
-        if(partitionField.getText() == null || partitionField.getText().isEmpty()) {
-            return false;
-        }
-        if(itemField.getText() == null || itemField.getText().isEmpty()) {
-            return false;
-        }
-        if(itemField.getText().equals("2000")){Alert alert = new Alert(AlertType.ERROR); alert.setTitle("ARE YOU MAD?!"); alert.showAndWait(); return false;}
+        if(folderField.getText().equals("2000")){Alert alert = new Alert(AlertType.ERROR); alert.setTitle("ARE YOU MAD?!"); alert.showAndWait(); return false;}
         return !(folderField.getText() == null ||folderField.getText().isEmpty());
     }
     
@@ -228,7 +219,7 @@ public class IX_RighCleaner extends Application {
                         for(String string : stringList ) {
                             folderIds.add(Long.valueOf(string));                    
                         }
-                        Updater updater_1 = new Updater(logger, userField.getText(),passField.getText(), Integer.valueOf(itemField.getText()), Integer.valueOf(depthField.getText()), Integer.valueOf(partitionField.getText()) ,groupField.getText(), folderIds, updater_DBServerField.getText(), updater_DBNameField.getText(), exportField.isSelected());
+                        Updater updater_1 = new Updater(logger, userField.getText(),passField.getText(), debugField.isSelected() , Integer.valueOf(partitionField.getText()) ,groupField.getText(), folderIds, updater_DBServerField.getText(), updater_DBNameField.getText(), exportField.isSelected());
                         tKeeper.addNewTask(updater_1);
                         break;
                     case "Update with Item ID":
@@ -480,7 +471,7 @@ public class IX_RighCleaner extends Application {
         moveRg_mandantField = new TextField();
         updater_DBServerField = new TextField();
         updater_DBNameField = new TextField();
-        
+        debugField = new CheckBox();
         
         moveRg_mandantField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         moveRg_bpField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -502,6 +493,9 @@ public class IX_RighCleaner extends Application {
         userBox.setPadding(new Insets(5,5,5,5));
         HBox passBox = new HBox(10,new Label("Passwort"), passField);
         passBox.setPadding(new Insets(5,5,5,5));
+        HBox debugBox = new HBox(10, new Label("Debug"), debugField);
+        debugBox.setPadding(new Insets(5,5,5,5));
+        
         HBox itemBox = new HBox(10,new Label("How many Items to update"), itemField);
         itemBox.setPadding(new Insets(5,5,5,5));
         itemField.setTooltip(new Tooltip("Has to be greater than the items in the folder"));
@@ -614,8 +608,6 @@ public class IX_RighCleaner extends Application {
         Container l = new Container("Move Rechnungen based on Category");
         Container m = new Container("Search for Objects with Classification");
         Container n = new Container("Check Rights");
-        a.addNode(depthBox);
-        a.addNode(itemBox);
         a.addNode(partitionBox);
         a.addNode(sizeBox);
         a.addNode(up_dbServerBox);
@@ -653,7 +645,7 @@ public class IX_RighCleaner extends Application {
         l.addNode(moveRg_excludeCopyBox);
         l.addNode(moveRg_clearClassBox);
         
-        VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox,runBox);
+        VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox, debugBox,runBox);
         tPane.getTabs().add(a);
         tPane.getTabs().add(b);
         tPane.getTabs().add(c);

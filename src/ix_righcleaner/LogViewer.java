@@ -52,7 +52,7 @@ class Log {
     }
 }
 
-class Logger {
+class Logger implements ILogger{
     private final Log log;
     private final String context;
 

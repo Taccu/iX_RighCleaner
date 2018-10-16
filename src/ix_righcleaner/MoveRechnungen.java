@@ -215,7 +215,7 @@ public class MoveRechnungen extends ContentServerTask{
             }
         return null;
     }
-    
+    //Findet den Accounting Ordner im BW
     private Node findAccounting( DocumentManagement docManClient, Node node) {
         GetNodesInContainerOptions options = new GetNodesInContainerOptions();
         options.setMaxDepth(1);
@@ -229,7 +229,7 @@ public class MoveRechnungen extends ContentServerTask{
         }
         return null;
     }
-            
+    // Verschiebt den Knoten "node" nach "destination"
     private void move(Node node, Node destination, DocumentManagement docManClient, Classifications classifyClient) {
         if(clearClassifcations) {
             boolean unClassify = classifyClient.unClassify(node.getID());

@@ -35,8 +35,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +67,7 @@ public abstract class ContentServerTask extends Thread{
     public final ArrayList<Long> exportIds = new ArrayList<>();
     public static Connection CONNECTION;
     public static String URL;
+   
     /**
      *
      * @param logger
@@ -113,6 +117,42 @@ public abstract class ContentServerTask extends Thread{
         catch(Exception e) {
             e.printStackTrace();
         }
+    }
+    
+    protected List<Long> getNodeIdsInContainer(long baseId, List<Long> subTypes, String dbServer, String dbName) throws ClassNotFoundException, SQLException {
+        List<Long> dataIds = new ArrayList<>();
+        connectToDatabase(dbServer, dbName);
+        PreparedStatement ps = CONNECTION.prepareStatement("WITH DCTE AS\n" +
+                    "(\n" +
+                    "SELECT DataID,ParentID,Name\n" +
+                    "FROM csadmin.DTree\n" +
+                    "WHERE DataID = ?\n" +
+                    "AND SubType IN (0,144,848)\n" +
+                    "UNION ALL\n" +
+                    "SELECT dt.DataID, dt.ParentID, dt.Name\n" +
+                    "FROM csadmin.DTree dt\n" +
+                    "INNER JOIN DCTE s ON dt.ParentID = s.DataID\n" +
+                    "WHERE SubType IN (0,144,848)\n" +
+                    ")\n" +
+                    "SELECT DataID FROM DCTE;");
+        ps.setLong(1, baseId);
+       /* Long[] longs = new Long[subTypes.size()];
+        longs = subTypes.toArray(longs);
+        Array array = CONNECTION.createArrayOf("int", longs);
+        ps.setArray(2, array);
+        ps.setArray(3, array);*/
+        try {
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()) {
+                dataIds.add(rs.getLong("DataID"));
+            }
+            
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage());
+        } finally {
+            ps.close();
+        }
+        return dataIds;
     }
     
     protected CategoryItemsUpgradeInfo chunkIt(CategoryItemsUpgradeInfo nrui){
@@ -250,6 +290,20 @@ public abstract class ContentServerTask extends Thread{
         return null;
     }
     
+    public MemberService getMsClient(boolean force) {
+        try {
+            MemberService_Service memServService = new MemberService_Service();
+            MemberService msClient = memServService.getBasicHttpBindingMemberService();
+            SOAPHeaderElement header;
+            header = generateSOAPHeaderElement(loginUserWithPassword(user, password, force));
+            ((WSBindingProvider) msClient).setOutboundHeaders(Headers.create(header));
+            return msClient;
+        } catch(Exception e) {
+            handleError(e);
+        }
+        return null;
+    }
+        
     public Classifications getClassifyClient() {
         // Create the DocumentManagement service client
         try {
@@ -281,8 +335,7 @@ public abstract class ContentServerTask extends Thread{
         }
         return null;
     }
-    
-        
+           
     public List<Long> getNodesBySearch(SearchService sService, String queryString){
         SingleSearchRequest query = new SingleSearchRequest();
         List<String> dataCollections = sService.getDataCollections();

@@ -6,25 +6,26 @@
 package ix_righcleaner;
 
 import com.opentext.livelink.service.docman.DocumentManagement;
-import com.opentext.livelink.service.docman.GetNodesInContainerOptions;
 import com.opentext.livelink.service.docman.Node;
 import com.opentext.livelink.service.docman.NodeRight;
 import com.opentext.livelink.service.docman.NodeRights;
 import com.opentext.livelink.service.memberservice.Member;
 import com.opentext.livelink.service.memberservice.MemberService;
-import static ix_righcleaner.ContentServerTask.CONNECTION;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
+import java.util.concurrent.LinkedBlockingDeque;
+import javafx.util.Pair;
 import static org.apache.commons.collections4.ListUtils.partition;
 
 /**
@@ -35,10 +36,11 @@ public class Updater extends ContentServerTask{
     
     private final Logger logger;
     private final String group, dbServer, dbName;
-    private final Integer items, depth, partitonSize;
+    private final boolean debug;
+    private final Integer partitonSize;
     private final ArrayList<Long> folderIds;
     private ExecutorService executor;
-    private final String sql = "WITH DCTE AS\n" +
+    /*private final String sql = "WITH DCTE AS\n" +
 "(\n" +
 "SELECT DataID,ParentID,Name\n" +
 "FROM csadmin.DTree\n" +
@@ -50,15 +52,14 @@ public class Updater extends ContentServerTask{
 "INNER JOIN DCTE s ON dt.ParentID = s.DataID\n" +
 "WHERE SubType IN (0,144, 848)\n" +
 ")\n" +
-"SELECT DataID FROM DCTE;";
+"SELECT DataID FROM DCTE;"; */
     
-    public Updater(Logger logger,String user, String password, Integer items, Integer depth,Integer partitonSize,String group, ArrayList<Long> folderIds, String dbServer, String dbName, boolean export) {
+    public Updater(Logger logger,String user, String password, boolean debug,Integer partitonSize,String group, ArrayList<Long> folderIds, String dbServer, String dbName, boolean export) {
         super(logger, user , password, export);
         this.logger = logger;
         this.group = group;
         this.folderIds = folderIds;
-        this.items = items;
-        this.depth = depth;
+        this.debug = debug;
         this.partitonSize = partitonSize;
         this.dbServer = dbServer;
         this.dbName = dbName;
@@ -79,17 +80,21 @@ public class Updater extends ContentServerTask{
             //Rest of children
             logger.info("Calculating number of items...");
             //docManClient.listNodes(baseId, false);
-            List<Long> nodesInContainer = newerWay(baseId);
+            List<Long> subTypes = new ArrayList<>();
+            subTypes.add(0l);
+            subTypes.add(144l);
+            subTypes.add(848l);
+            List<Long> nodesInContainer = newestWay(baseId, subTypes, dbServer, dbName);
             logger.debug("Total nodes:" + nodesInContainer.size());
 
             List<List<Long>> partitions = partition(nodesInContainer, partitonSize);
             executor = Executors.newFixedThreadPool(10);
             CompletionService<List<Long>>  completionService =
                     new ExecutorCompletionService<>(executor);
-            for(List<Long> partition : partitions) {
+            partitions.stream().parallel().forEach(partition -> {
                 logger.info("Creating new parition thread with " +partition.size());
-                completionService.submit(new UpdateNodes(partition));
-            }
+                completionService.submit(new UpdateNodes(partition,debug));
+            });
 
             int received = 0;
             boolean erros = false;
@@ -98,6 +103,8 @@ public class Updater extends ContentServerTask{
                     Future<List<Long>> resultFuture = completionService.take();
                     exportIds.addAll(resultFuture.get());
                     received ++;
+                    logger.info("Document remaining: " + partitonSize*(partitions.size()-received) + "...");
+                    logger.info("Completed " + received + "/" + partitions.size() +" partitons: " + (100.00 * received/ partitions.size()) + "%...");
                 } catch(Exception e) {
                     logger.error(e.getMessage());
                     erros = true;
@@ -110,104 +117,66 @@ public class Updater extends ContentServerTask{
         setProcessedItems(exportIds.size());
     }
 
-    private List<Long> newerWay(long baseId) {
-        List<Long> dataIds = new ArrayList<>();
+    private List<Long> newestWay(long baseId, List<Long> subTypes, String dbServer, String dbName) {
         try {
-            connectToDatabase(dbServer, dbName);
+            return getNodeIdsInContainer(baseId, subTypes, dbServer, dbName);
         } catch (ClassNotFoundException | SQLException ex) {
-            handleError(ex);
-        }
-        PreparedStatement ps = null;
-        try {
-           ps = CONNECTION.prepareStatement(sql);
-        } catch (SQLException ex) {
-            handleError(ex);
-        }
-        if(ps == null) 
-        {
-            handleError(new Exception("ps is null"));
-        }
-        
-        try {
-            ps.setLong(1, baseId);
-            ResultSet rs = ps.executeQuery();
-            while(rs.next()) {
-                dataIds.add(rs.getLong("DataID"));
-            }
-            
-        } catch (SQLException ex) {
             logger.error(ex.getMessage());
         }
-        return dataIds;
-    }
-    
-    private List<Node> newWay(long baseId){
-        return getDocManClient().listNodes(baseId, false);
-        //return getNodesBySearch(getSearchClient(), "where1=(\"OTSubType\":\"144\")&lookfor1=complexquery");
-    }
-    
-    private List<Node> oldWay(long baseId) {
-        GetNodesInContainerOptions options;
-        options = new GetNodesInContainerOptions();
-        options.setMaxDepth(depth);
-        options.setMaxResults(items);
-        return getDocManClient().getNodesInContainer(baseId, options);
+        return null;
     }
     
     class UpdateNodes implements Callable<List<Long>>{
         private final List<Long> partition;
         private final List<Long> processedIds = new ArrayList<>();
-        
-        public UpdateNodes(List<Long> partition ) {
+        private final ConcurrentHashMap<Long,Member> members = new ConcurrentHashMap<>();
+        private final boolean debug;
+        public UpdateNodes(List<Long> partition, boolean debug ) {
             this.partition = partition;
-            
+            this.debug = debug;
         }
 
         @Override
         public List<Long> call() {
-            // Create the DocumentManagement service client
-            //DocumentManagement docManClient = getDocManClient();
             MemberService msClient = getMsClient();
             long startTime = System.currentTimeMillis();
             DocumentManagement docManClient = getDocManClient(true);
-            for(Long node1 : partition)  {
-                Node node = docManClient.getNode(node1);
-                if(node == null) {
-                    logger.error("node was null");
-                    continue;
-                }
-                logger.debug("Processing " + node.getName() + "...");
-                NodeRights nodeRights = docManClient.getNodeRights(node.getID());
-                List<NodeRight> aclRights = nodeRights.getACLRights();
-                logger.debug("Total right count for " +node.getName() +"(id:" + node.getID() + "):"+ aclRights.size());
-                if(aclRights.size() > 0) {
-                    logger.debug("Processing " +node.getName() +"(id:" + node.getID() + ")");
-                    aclRights.forEach((right) -> {
-                        Member rightOwner = msClient.getMemberById(right.getRightID());
-                        logger.debug("Processing item " + node.getName() + "(id:" + node.getID() + ")" + ": current right entry:" + rightOwner.getName() + "(id:" +right.getRightID() + ")");
-                        if(group.isEmpty()) {
-                            logger.info("Removing "+ rightOwner.getName() +"(id:" + right.getRightID() + ")" + " from " +node.getName() +"(id:" + node.getID() + ")");
-                            docManClient.removeNodeRight(node.getID(), right);
-                            processedIds.add(node.getID());
-                        } else {
-                            if(rightOwner.getName().equals(group)) {
-                                logger.info("Removing "+ rightOwner.getName() +"(id:" + right.getRightID() + ")" + " from " +node.getName() +"(id:" + node.getID() + ")");
-
-                                docManClient.removeNodeRight(node.getID(), right);
-                                processedIds.add(node.getID());
-                            }   
-                        }
-                    });
-                } else {
-                    logger.error(node.getID() + " has no rights.");
-                }    
-            }
+            new_ProcessIds(docManClient, msClient);
             //don't
             long stopTime = System.currentTimeMillis();
             long elapsedTime = stopTime - startTime;
             logger.info("Partition has updated items in basefolder "+ folderIds.get(0) + " in " + elapsedTime + " milliseconds...");
             return processedIds;
         }
+        
+        private void new_ProcessIds(DocumentManagement docManClient, MemberService msClient) {
+            partition.stream().parallel()
+                    .forEach(nodeId -> {
+                        Node node = docManClient.getNode(nodeId);
+                        if(node==null) return;
+                        
+                        docManClient.getNodeRights(node.getID()).getACLRights().stream()
+                                .forEach(right -> {
+                                    Member rightOwner = getOrAddMaybe(msClient,right.getRightID());
+                                    logger.debug("Processing item " + node.getName() + "(id:" + node.getID() + ")" + ": current right entry:" + rightOwner.getName() + "(id:" +right.getRightID() + ")");
+                                    if(group.isEmpty() || group.equals(rightOwner.getName())) {
+                                        removeNodeRight(docManClient,msClient, rightOwner,node, right,debug);
+                                    }
+                                });
+                    
+                    });
+        }
+        
+        private Member getOrAddMaybe(MemberService msClient,Long rightId) {
+           if(members.containsKey(rightId)) return members.getOrDefault(rightId, null);
+           members.put(rightId, msClient.getMemberById(rightId));
+           return getOrAddMaybe(msClient, rightId);
+        }
+        
+        private void removeNodeRight(DocumentManagement docManClient, MemberService msClient, Member rightOwner, Node node, NodeRight right, boolean debug) {
+            logger.info("Removing "+ rightOwner.getName() +"(id:" + right.getRightID() + ")" + " from " +node.getName() +"(id:" + node.getID() + ")");
+            if(!debug)docManClient.removeNodeRight(node.getID(), right);
+            processedIds.add(node.getID());
+        }
     }
-    
 }

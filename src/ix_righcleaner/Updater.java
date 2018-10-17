@@ -8,16 +8,12 @@ package ix_righcleaner;
 import com.opentext.livelink.service.docman.DocumentManagement;
 import com.opentext.livelink.service.docman.Node;
 import com.opentext.livelink.service.docman.NodeRight;
-import com.opentext.livelink.service.docman.NodeRights;
 import com.opentext.livelink.service.memberservice.Member;
 import com.opentext.livelink.service.memberservice.MemberService;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,8 +21,6 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingDeque;
-import javafx.util.Pair;
 import static org.apache.commons.collections4.ListUtils.partition;
 
 /**
@@ -40,11 +34,12 @@ public class Updater extends ContentServerTask{
     private final boolean debug;
     private final Integer partitonSize;
     private final ArrayList<Long> folderIds;
+    private final long rightId;
     private ExecutorService executor;
     private final ConcurrentHashMap<Long,Member> members = new ConcurrentHashMap<>();
     private final DecimalFormat df = new DecimalFormat("0.00##");
     
-    public Updater(Logger logger,String user, String password, boolean debug,Integer partitonSize,String group, ArrayList<Long> folderIds, String dbServer, String dbName, boolean export) {
+    public Updater(Logger logger,String user, String password, boolean debug,Integer partitonSize,String group, ArrayList<Long> folderIds, String dbServer, String dbName, long rightId, boolean export) {
         super(logger, user , password, export);
         this.logger = logger;
         this.group = group;
@@ -53,6 +48,7 @@ public class Updater extends ContentServerTask{
         this.partitonSize = partitonSize;
         this.dbServer = dbServer;
         this.dbName = dbName;
+        this.rightId = rightId;
     }
     
     @Override
@@ -73,13 +69,16 @@ public class Updater extends ContentServerTask{
             subTypes.add(0l);
             subTypes.add(144l);
             subTypes.add(848l);
-            List<Long> nodesInContainer = newestWay(baseId, subTypes, dbServer, dbName);
+            List<Long> nodesInContainer;
+            if(rightId>0) nodesInContainer = newestWay(baseId, subTypes, dbServer, dbName, rightId);
+            else nodesInContainer = newestWay(baseId, subTypes, dbServer, dbName);
             logger.debug("Total nodes:" + nodesInContainer.size());
 
             List<List<Long>> partitions = partition(nodesInContainer, partitonSize);
             executor = Executors.newFixedThreadPool(10);
             CompletionService<List<Long>>  completionService =
                     new ExecutorCompletionService<>(executor);
+            long startTime = System.currentTimeMillis();
             partitions.stream().parallel().forEach(partition -> {
                 logger.info("Creating new parition thread with " +partition.size());
                 completionService.submit(new UpdateNodes(partition,debug,members));
@@ -97,7 +96,7 @@ public class Updater extends ContentServerTask{
                     Future<List<Long>> resultFuture = completionService.take();
                     exportIds.addAll(resultFuture.get());
                     received ++;
-                    logger.info("Document remaining: " + partitonSize*(partitionCount-received) + "...");
+                    logger.info("Document remaining: " + partitonSize*(partitionCount-received) + ". Approx. " + df.format(calcTimeLeft(startTime, partitionCount, received)) + " minutes left");
                     logger.info("Completed " + received + "/" + partitionCount +" partitons: " + df.format((100.00 * received/ partitionCount)) + "%...");
                 } catch(Exception e) {
                     logger.error(e.getMessage());
@@ -110,10 +109,27 @@ public class Updater extends ContentServerTask{
         executor.shutdown();
         setProcessedItems(exportIds.size());
     }
-
+    
+      private double calcTimeLeft(long startTime, int partitionCount, int received) {
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        if(elapsedTime < 1l) elapsedTime = 1l;
+        if(partitionCount == 0 || received== 0) return 9999999.00;
+        System.out.println(received + ":" + elapsedTime + ":" + partitionCount );
+        return 1.00*(partitionCount/(1.00*received/elapsedTime))/1000/60;
+    }
+   
     private List<Long> newestWay(long baseId, List<Long> subTypes, String dbServer, String dbName) {
         try {
             return getNodeIdsInContainer(baseId, subTypes, dbServer, dbName);
+        } catch (ClassNotFoundException | SQLException ex) {
+            logger.error(ex.getMessage());
+        }
+        return null;
+    }
+    
+    private List<Long> newestWay(long baseId, List<Long> subTypes, String dbServer, String dbName, long rightId) {
+        try {
+            return getNodesInContainerWithRightId(baseId, subTypes, dbServer, dbName, rightId);
         } catch (ClassNotFoundException | SQLException ex) {
             logger.error(ex.getMessage());
         }

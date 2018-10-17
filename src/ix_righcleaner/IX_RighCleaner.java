@@ -44,7 +44,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField updater_DBServerField, updater_DBNameField,moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField updater_RightIdField, updater_DBServerField, updater_DBNameField,moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
@@ -146,6 +146,12 @@ public class IX_RighCleaner extends Application {
                 return false;
             }
         }
+        if(updater_RightIdField.getText() == null) {
+            return false;
+        }
+        if(updater_RightIdField.getText().isEmpty()) {
+            updater_RightIdField.setText("0");
+        }
         if(updater_DBServerField.getText() == null || updater_DBServerField.getText().isEmpty()) {
             return false;
         }
@@ -219,7 +225,7 @@ public class IX_RighCleaner extends Application {
                         for(String string : stringList ) {
                             folderIds.add(Long.valueOf(string));                    
                         }
-                        Updater updater_1 = new Updater(logger, userField.getText(),passField.getText(), debugField.isSelected() , Integer.valueOf(partitionField.getText()) ,groupField.getText(), folderIds, updater_DBServerField.getText(), updater_DBNameField.getText(), exportField.isSelected());
+                        Updater updater_1 = new Updater(logger, userField.getText(),passField.getText(), debugField.isSelected() , Integer.valueOf(partitionField.getText()) ,groupField.getText(), folderIds, updater_DBServerField.getText(), updater_DBNameField.getText(), Long.valueOf(updater_RightIdField.getText()), exportField.isSelected());
                         tKeeper.addNewTask(updater_1);
                         break;
                     case "Update with Item ID":
@@ -377,6 +383,7 @@ public class IX_RighCleaner extends Application {
                 moveRg_bpField.clear();
                 updater_DBServerField.clear();
                 updater_DBNameField.clear();
+                updater_RightIdField.clear();
                 //appl_inherit;
             }
         });
@@ -472,6 +479,8 @@ public class IX_RighCleaner extends Application {
         updater_DBServerField = new TextField();
         updater_DBNameField = new TextField();
         debugField = new CheckBox();
+        updater_RightIdField = new TextField();
+        updater_RightIdField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         
         moveRg_mandantField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         moveRg_bpField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -510,6 +519,8 @@ public class IX_RighCleaner extends Application {
         up_dbServerBox.setPadding(new Insets(5,5,5,5));
         HBox up_dbNameBox = new HBox(10, new Label("DB Name"), updater_DBNameField);
         up_dbNameBox.setPadding(new Insets(5,5,5,5));
+        HBox up_rightIdBox = new HBox(10, new Label("Right Id"), updater_RightIdField);
+        up_rightIdBox.setPadding(new Insets(5,5,5,5));
         
         HBox groupBox = new HBox(10,new Label("Group to Remove") ,groupField);
         groupBox.setPadding(new Insets(5,5,5,5));
@@ -612,6 +623,7 @@ public class IX_RighCleaner extends Application {
         a.addNode(sizeBox);
         a.addNode(up_dbServerBox);
         a.addNode(up_dbNameBox);
+        a.addNode(up_rightIdBox);
         b.addNode(folderPermBox);
         c.addNode(dataIdBox);
         c.addNode(exportParentBox);

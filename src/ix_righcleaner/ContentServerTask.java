@@ -120,6 +120,49 @@ public abstract class ContentServerTask extends Thread{
         }
     }
     
+    protected List<Long> getNodesInContainerWithRightId(long baseId, List<Long> subTypes, String dbServer, String dbName, long rightId) throws ClassNotFoundException, SQLException{
+        List<Long> dataIds = new ArrayList<>();
+        connectToDatabase(dbServer, dbName);
+        PreparedStatement ps = CONNECTION.prepareStatement("WITH DCTE AS\n" +
+            "(\n" +
+            "SELECT DataID,ParentID,Name\n" +
+            "FROM GALCS1.csadmin.DTree\n" +
+            "WHERE DataID = ?\n" +
+            "AND SubType IN (0,144,848)\n" +
+            "UNION ALL\n" +
+            "SELECT dt.DataID, dt.ParentID, dt.Name\n" +
+            "FROM GALCS1.csadmin.DTree dt\n" +
+            "INNER JOIN DCTE s ON dt.ParentID = s.DataID\n" +
+            "WHERE SubType IN (0,144,848)\n" +
+            ")\n" +
+            "SELECT T1.DataID\n" +
+            "FROM GALCS1.csadmin.DTree T1\n" +
+            "RIGHT JOIN\n" +
+            "( SELECT * FROM DCTE) AS T2\n" +
+            "ON T1.DataID = T2.DataID\n" +
+            "LEFT JOIN\n" +
+            "(SELECT DataID\n" +
+            "FROM GALCS1.csadmin.DTreeACL\n" +
+            "WHERE RightID = ?) AS T3\n" +
+            "ON T3.DataID = T1.DataID\n" +
+            "WHERE T3.DataID IS NOT NULL");
+        ps.setLong(1, baseId);
+        ps.setLong(2, rightId);
+        try {
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()) {
+                dataIds.add(rs.getLong("DataID"));
+            }
+            
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage());
+        } finally {
+            ps.close();
+            CONNECTION.close();
+        }
+        return dataIds;
+    }
+    
     protected List<Long> getNodeIdsInContainer(long baseId, List<Long> subTypes, String dbServer, String dbName) throws ClassNotFoundException, SQLException {
         List<Long> dataIds = new ArrayList<>();
         connectToDatabase(dbServer, dbName);
@@ -177,6 +220,7 @@ public abstract class ContentServerTask extends Thread{
         }
         return nrui;
     }
+    
     public SOAPHeaderElement generateSOAPHeaderElement(OTAuthentication oauth) throws SOAPException {
         // The namespace of the OTAuthentication object
         final String ECM_API_NAMESPACE = "urn:api.ecm.opentext.com";
@@ -233,6 +277,7 @@ public abstract class ContentServerTask extends Thread{
         }
         return OT_AUTH;
     }
+    
     public static void writeArrayToPath(List<Long> list, Path path) throws IOException {
         List<String> arrayList = new ArrayList<>(list.size());
         list.stream().forEach((myLong) -> {
@@ -257,6 +302,7 @@ public abstract class ContentServerTask extends Thread{
         }
         return null;
     }
+    
     public DocumentManagement getDocManClient(boolean force) {
         // Create the DocumentManagement service client
         try {
@@ -367,7 +413,6 @@ public abstract class ContentServerTask extends Thread{
     private String extractId(String string){
         return string.replaceAll("(.*)DataId=", "").replaceAll("&(.*)", "");
     }
-    
     
     @Override
     public void run() {

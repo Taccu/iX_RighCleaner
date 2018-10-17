@@ -366,7 +366,8 @@ public class IX_RighCleaner extends Application {
                         tKeeper.addNewTask(cRights_1);
                         break;
                     case "Move Error":
-                        CheckAlreadyArchived arch_1 = new CheckAlreadyArchived(logger, userField.getText(),  passField.getText(), arch_dbServerField.getText(), arch_dbNameField.getText(), arch_dirField.getText(), arch_destDirField.getText(), exportField.isSelected());
+                        CheckAlreadyArchived arch_1 = new CheckAlreadyArchived(logger, userField.getText(),  passField.getText(), debugField.isSelected(), arch_dbServerField.getText(), arch_dbNameField.getText(), arch_dirField.getText(), arch_destDirField.getText(), exportField.isSelected());
+                        tKeeper.addNewTask(arch_1);
                         break;
                     default:
                         logger.error("Something went wrong");

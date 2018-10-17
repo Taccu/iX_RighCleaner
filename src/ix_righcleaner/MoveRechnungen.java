@@ -34,7 +34,7 @@ public class MoveRechnungen extends ContentServerTask{
 
     private final long sourceFolderId, invoiceId, bpId, mandantId;
     private final boolean inheritPermFromDest,useDestinationCategories,excludeCopies,clearClassifcations;
-    public static final ArrayList<AdvancedNode> B_WORKSPACES = new ArrayList<>();
+    private static final ArrayList<AdvancedNode> B_WORKSPACES = new ArrayList<>();
     public MoveRechnungen(Logger logger, String user, String password, long sourceFolderId, long invoiceId, boolean inheritPermFromDest, boolean useDestinationCategories, boolean excludeCopies, boolean clearClassifcations, long bpId, long mandantId, boolean export) {
         super(logger, user, password, export);
         this.sourceFolderId = sourceFolderId;
@@ -54,64 +54,62 @@ public class MoveRechnungen extends ContentServerTask{
     
     @Override
     public void doWork() {
-        DocumentManagement docManClient = getDocManClient();
         GetNodesInContainerOptions options = new GetNodesInContainerOptions();
         options.setMaxDepth(Integer.MAX_VALUE);
         options.setMaxResults(Integer.MAX_VALUE);
-        List<Node> nodesInSourceFolder = docManClient.getNodesInContainer(sourceFolderId, options);
+        List<Node> nodesInSourceFolder = getDocManClient().getNodesInContainer(sourceFolderId, options);
         SearchService searchClient = getSearchClient();
         int i = 0;
-        for(Node currentNode : docManClient.getNodes(getNodesBySearch(searchClient))) {
-            i++;
-            if(i%200==0) docManClient = getDocManClient(true);
-            AdvancedNode workspace = new AdvancedNode();
-            workspace.setNode(currentNode);
-            if(currentNode.getType().equals("EcmWorkspace")) {
-                for(AttributeGroup group : currentNode.getMetadata().getAttributeGroups()) {
-                    if(group.getKey().startsWith(String.valueOf(bpId))) {
-                        for(DataValue value : group.getValues())  {
-                            if(value instanceof StringValue) {
-                                StringValue str_Value = (StringValue) value;
-                                for(String string : str_Value.getValues()) {
-                                    if(str_Value.getDescription().equals("Cost Center")) {
-                                        workspace.setCostCenter(string);
-                                    }
-                                    if(str_Value.getDescription().equals("Type")) {
-                                        workspace.setType(string);
-                                    }
-                                    if(str_Value.getDescription().equals("BusinessPartnerID") || str_Value.getDescription().equals("Business Partner ID")) {
-                                        workspace.setbPartner(string);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if(group.getKey().startsWith(String.valueOf(mandantId))) {
-                        for(DataValue value : group.getValues())  {
-                            if(value instanceof StringValue) {
-                                StringValue str_Value = (StringValue) value;
-                                for(String string : str_Value.getValues()) {
-                                    if(str_Value.getDescription().equals("Mandant")) {
-                                        workspace.setMandant(string);
-                                    }
-                                }
-                            }
-                        }
-                    }
+        List<Node> nodes = getDocManClient().getNodes(getNodesBySearch(searchClient));
+        
+        nodes.stream().filter(node -> node.getType().equals("EcmWorkspace"))
+            .forEach( node -> {
+                double random = Math.random();
+                DocumentManagement docManClient;
+                if(random < 0.97) {
+                    docManClient = getDocManClient();
                 }
+                else {
+                    docManClient = getDocManClient(true);
+                }
+                AdvancedNode workspace = new AdvancedNode();
+                node.getMetadata().getAttributeGroups().stream()
+                    .filter(group -> (group.getKey().startsWith(String.valueOf(bpId)) || group.getKey().startsWith(String.valueOf(mandantId))))
+                        .forEach(group -> group.getValues().stream()
+                        .filter(value -> value instanceof StringValue)
+                        .forEach(str_value -> {
+                            StringValue str_Value = (StringValue)str_value;
+                            str_Value.getValues().stream().forEach(string -> {
+                                switch(string){
+                                    case "Cost Center":
+                                        workspace.setCostCenter(string);
+                                        break;
+                                    case "Type":
+                                        workspace.setType(string);
+                                        break;
+                                    case "BusinessPartnerID":
+                                        workspace.setbPartner(string);
+                                        break;
+                                    case "Business Partner ID":
+                                        workspace.setbPartner(string);
+                                        break;
+                                    case "Mandant":
+                                        workspace.setMandant(string);
+                                        break;
+                                    default:
+                                }
+                            });
+                        }));
                 B_WORKSPACES.add(workspace);
-            } else {
-                //Not a ecm workspace
-                
-            }
-        }
-        oldMove(nodesInSourceFolder, docManClient);
+            });
+        oldMove(nodesInSourceFolder, getDocManClient());
     }
     
     private void newMove(List<Node> nodesInSourceFolder, DocumentManagement docManClient) {
         if(!excludeCopies)nodesInSourceFolder.stream().filter(a -> a.getName().matches("(?i:.*(copy).*)"))
                 .parallel().forEach(node -> {
-                    node.getMetadata().getAttributeGroups().stream().filter(a -> a.getKey().startsWith(String.valueOf(invoiceId)))
+                    node.getMetadata().getAttributeGroups().stream()
+                            .filter(a -> a.getKey().startsWith(String.valueOf(invoiceId)))
                             .forEach(
                             values -> values.getValues().stream().forEach(value -> {
                                 
@@ -121,7 +119,8 @@ public class MoveRechnungen extends ContentServerTask{
         
         nodesInSourceFolder.stream().filter(a -> !a.getName().matches("(?i:.*(copy).*)"))
                 .parallel().forEach(node -> {
-                node.getMetadata().getAttributeGroups().stream().filter(a -> a.getKey().startsWith(String.valueOf(invoiceId)))
+                node.getMetadata().getAttributeGroups().stream()
+                        .filter(a -> a.getKey().startsWith(String.valueOf(invoiceId)))
                             .forEach(
                             values -> values.getValues().stream().forEach(value -> {
                                 

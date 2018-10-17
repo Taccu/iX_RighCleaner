@@ -44,7 +44,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField updater_RightIdField, updater_DBServerField, updater_DBNameField,moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField  arch_dbServerField, arch_dbNameField, arch_dirField, arch_destDirField, updater_RightIdField, updater_DBServerField, updater_DBNameField,moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
@@ -60,6 +60,22 @@ public class IX_RighCleaner extends Application {
             return false;
         }
         return groupField.getText() != null;
+    }
+    
+    private boolean checkArchTab() {
+        if(arch_dbServerField.getText() == null || arch_dbServerField.getText().isEmpty()) {
+            return false;
+        }
+        if(arch_dbNameField.getText()== null || arch_dbNameField.getText().isEmpty()) {
+            return false;
+        }
+        if(arch_dirField.getText() == null || arch_dirField.getText().isEmpty()) {
+            return false;
+        }
+        if(arch_destDirField.getText() == null || arch_destDirField.getText().isEmpty()) {
+            return false;
+        }
+        return true;
     }
     
     private boolean checkMoveRgTab() {
@@ -349,6 +365,9 @@ public class IX_RighCleaner extends Application {
                         ControlRights cRights_1 = new ControlRights(logger, userField.getText(), passField.getText(), exportField.isSelected());
                         tKeeper.addNewTask(cRights_1);
                         break;
+                    case "Move Error":
+                        CheckAlreadyArchived arch_1 = new CheckAlreadyArchived(logger, userField.getText(),  passField.getText(), arch_dbServerField.getText(), arch_dbNameField.getText(), arch_dirField.getText(), arch_destDirField.getText(), exportField.isSelected());
+                        break;
                     default:
                         logger.error("Something went wrong");
                 }
@@ -480,6 +499,12 @@ public class IX_RighCleaner extends Application {
         updater_DBNameField = new TextField();
         debugField = new CheckBox();
         updater_RightIdField = new TextField();
+        arch_dbServerField = new TextField();
+        arch_dbNameField = new TextField();
+        arch_dirField = new TextField();
+        arch_destDirField = new TextField();
+        
+        
         updater_RightIdField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         
         moveRg_mandantField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -498,6 +523,16 @@ public class IX_RighCleaner extends Application {
         partitionField.setTooltip(new Tooltip("Kill laptop with < 50, stay safe with 200 or more"));
         depthField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         itemField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
+        
+        HBox arch_dbServerBox = new HBox(10, new Label("DB Server"), arch_dbServerField);
+        arch_dbServerBox.setPadding(new Insets(5,5,5,5));
+        HBox arch_dbNameBox = new HBox(10, new Label("DB Name"), arch_dbNameField);
+        arch_dbNameBox.setPadding(new Insets(5,5,5,5));
+        HBox arch_dirBox = new HBox(10, new Label("Vz wo die Errors liegen"), arch_dirField);
+        arch_dirBox.setPadding(new Insets(5,5,5,5));
+        HBox arch_destDirBox = new HBox(10, new Label("Wohin sie verschoben werden sollen"), arch_destDirField);
+        arch_destDirBox.setPadding(new Insets(5,5,5,5));
+        
         HBox userBox = new HBox(10,new Label("CS Nutzer"),userField);
         userBox.setPadding(new Insets(5,5,5,5));
         HBox passBox = new HBox(10,new Label("Passwort"), passField);
@@ -619,6 +654,7 @@ public class IX_RighCleaner extends Application {
         Container l = new Container("Move Rechnungen based on Category");
         Container m = new Container("Search for Objects with Classification");
         Container n = new Container("Check Rights");
+        Container o = new Container("Move Error");
         a.addNode(partitionBox);
         a.addNode(sizeBox);
         a.addNode(up_dbServerBox);
@@ -656,6 +692,10 @@ public class IX_RighCleaner extends Application {
         l.addNode(moveRg_categoriesBox);
         l.addNode(moveRg_excludeCopyBox);
         l.addNode(moveRg_clearClassBox);
+        o.addNode(arch_dbServerBox);
+        o.addNode(arch_dbNameBox);
+        o.addNode(arch_dirBox);
+        o.addNode(arch_destDirBox);
         
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox, debugBox,runBox);
         tPane.getTabs().add(a);
@@ -672,6 +712,7 @@ public class IX_RighCleaner extends Application {
         tPane.getTabs().add(l);
         tPane.getTabs().add(m);
         tPane.getTabs().add(n);
+        tPane.getTabs().add(o);
         SplitPane leftPane = new SplitPane(tPane,bottom);
         leftPane.setOrientation(Orientation.VERTICAL);
         SplitPane root = new SplitPane(leftPane,layout);

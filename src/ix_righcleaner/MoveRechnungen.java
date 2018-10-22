@@ -33,9 +33,9 @@ import java.util.Objects;
 public class MoveRechnungen extends ContentServerTask{
 
     private final long sourceFolderId, invoiceId, bpId, mandantId;
-    private final boolean inheritPermFromDest,useDestinationCategories,excludeCopies,clearClassifcations;
+    private final boolean inheritPermFromDest,useDestinationCategories,excludeCopies,clearClassifcations,debug;
     private static final ArrayList<AdvancedNode> B_WORKSPACES = new ArrayList<>();
-    public MoveRechnungen(Logger logger, String user, String password, long sourceFolderId, long invoiceId, boolean inheritPermFromDest, boolean useDestinationCategories, boolean excludeCopies, boolean clearClassifcations, long bpId, long mandantId, boolean export) {
+    public MoveRechnungen(Logger logger, String user, String password, long sourceFolderId, long invoiceId, boolean inheritPermFromDest, boolean useDestinationCategories, boolean excludeCopies, boolean clearClassifcations, long bpId, long mandantId,boolean debug, boolean export) {
         super(logger, user, password, export);
         this.sourceFolderId = sourceFolderId;
         this.invoiceId = invoiceId;
@@ -45,6 +45,7 @@ public class MoveRechnungen extends ContentServerTask{
         this.clearClassifcations = clearClassifcations;
         this.bpId = bpId;
         this.mandantId = mandantId;
+        this.debug = debug;
     }
     
     @Override
@@ -73,6 +74,7 @@ public class MoveRechnungen extends ContentServerTask{
                     docManClient = getDocManClient(true);
                 }
                 AdvancedNode workspace = new AdvancedNode();
+                workspace.setNode(node);
                 node.getMetadata().getAttributeGroups().stream()
                     .filter(group -> (group.getKey().startsWith(String.valueOf(bpId)) || group.getKey().startsWith(String.valueOf(mandantId))))
                         .forEach(group -> group.getValues().stream()
@@ -100,6 +102,7 @@ public class MoveRechnungen extends ContentServerTask{
                                 }
                             });
                         }));
+                if(debug)logger.debug("Adding " + workspace.getNode().getName() + ":"+ workspace.getType() +":" + workspace.getCostCenter() + ":" + workspace.getMandant() + ":" + workspace.getbPartner());
                 B_WORKSPACES.add(workspace);
             });
         oldMove(nodesInSourceFolder, getDocManClient());
@@ -185,6 +188,7 @@ public class MoveRechnungen extends ContentServerTask{
                     }
                 }
             }
+            if(debug) logger.debug("Checking " + kostId + ":" + bpName + ":" + mandantName);
             destination = getWorkspace(docManClient, lookForCopyFolder, kostId, bpName, mandantName);
             if(destination == null) {
                 if(!bpName.isEmpty())logger.warn("Couldn't find the Accounting folder in Bussiness Partner for " + node.getName() + "(id:" + node.getID() + "). Was looking in Mandant " + mandantName + " for BP " + bpName);

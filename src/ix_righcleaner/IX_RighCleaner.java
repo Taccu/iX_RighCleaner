@@ -353,7 +353,7 @@ public class IX_RighCleaner extends Application {
                         if(!checkMoveRgTab()) {
                             return;
                         }
-                        MoveRechnungen move_1 = new MoveRechnungen(logger, userField.getText(), passField.getText(),Long.valueOf(moveRg_srcFoldField.getText()),Long.valueOf(moveRg_invoiceField.getText()),moveRg_inheritField.isSelected(),moveRg_categoriesField.isSelected(),moveRg_excludeCopyField.isSelected(),moveRg_clearClassField.isSelected(),Long.valueOf(moveRg_bpField.getText()), Long.valueOf(moveRg_mandantField.getText()), exportField.isSelected());
+                        MoveRechnungen move_1 = new MoveRechnungen(logger, userField.getText(), passField.getText(),Long.valueOf(moveRg_srcFoldField.getText()),Long.valueOf(moveRg_invoiceField.getText()),moveRg_inheritField.isSelected(),moveRg_categoriesField.isSelected(),moveRg_excludeCopyField.isSelected(),moveRg_clearClassField.isSelected(),Long.valueOf(moveRg_bpField.getText()), Long.valueOf(moveRg_mandantField.getText()), debugField.isSelected(), exportField.isSelected());
                         tKeeper.addNewTask(move_1);
                         break;
                     case "Search for Objects with Classification":

@@ -35,6 +35,7 @@ public class MoveRechnungen extends ContentServerTask{
     private final long sourceFolderId, invoiceId, bpId, mandantId;
     private final boolean inheritPermFromDest,useDestinationCategories,excludeCopies,clearClassifcations,debug;
     private static final ArrayList<AdvancedNode> B_WORKSPACES = new ArrayList<>();
+    
     public MoveRechnungen(Logger logger, String user, String password, long sourceFolderId, long invoiceId, boolean inheritPermFromDest, boolean useDestinationCategories, boolean excludeCopies, boolean clearClassifcations, long bpId, long mandantId,boolean debug, boolean export) {
         super(logger, user, password, export);
         this.sourceFolderId = sourceFolderId;
@@ -58,16 +59,17 @@ public class MoveRechnungen extends ContentServerTask{
         GetNodesInContainerOptions options = new GetNodesInContainerOptions();
         options.setMaxDepth(Integer.MAX_VALUE);
         options.setMaxResults(Integer.MAX_VALUE);
+        //Alle Belege in dem Ordner
         List<Node> nodesInSourceFolder = getDocManClient().getNodesInContainer(sourceFolderId, options);
         SearchService searchClient = getSearchClient();
-        int i = 0;
+        //Alle Business Workspaces
         List<Node> nodes = getDocManClient().getNodes(getNodesBySearch(searchClient));
         
         nodes.stream().filter(node -> node.getType().equals("EcmWorkspace"))
             .forEach( node -> {
                 double random = Math.random();
                 DocumentManagement docManClient;
-                if(random < 0.97) {
+                if(random < 0.85) {
                     docManClient = getDocManClient();
                 }
                 else {
@@ -75,27 +77,39 @@ public class MoveRechnungen extends ContentServerTask{
                 }
                 AdvancedNode workspace = new AdvancedNode();
                 workspace.setNode(node);
-                node.getMetadata().getAttributeGroups().stream()
-                    .filter(group -> (group.getKey().startsWith(String.valueOf(bpId)) || group.getKey().startsWith(String.valueOf(mandantId))))
+                node.getMetadata().getAttributeGroups().stream().peek(peeek -> {if(debug)System.out.println(peeek.getKey());})
+                    .filter(group -> {
+                        if(group.getKey().startsWith(String.valueOf(bpId)) || group.getKey().startsWith(String.valueOf(mandantId))) {
+                            if(debug)System.out.println("Matching");
+                            return true;
+                        }
+                        if(debug)System.out.println("Not Matching " + group.getKey() + "|" + String.valueOf(bpId)+"|"+String.valueOf(mandantId));
+                        return false;
+                    })
+                        .peek(peeek -> {if(debug)System.out.println(peeek.getKey());})
                         .forEach(group -> group.getValues().stream()
-                        .filter(value -> value instanceof StringValue)
                         .forEach(str_value -> {
                             StringValue str_Value = (StringValue)str_value;
                             str_Value.getValues().stream().forEach(string -> {
                                 switch(string){
                                     case "Cost Center":
+                                        if(debug)System.out.println("Setting Cost Center to " + string +" at " + node.getName());
                                         workspace.setCostCenter(string);
                                         break;
                                     case "Type":
+                                        if(debug)System.out.println("Setting Type to " + string +" at " + node.getName());
                                         workspace.setType(string);
                                         break;
                                     case "BusinessPartnerID":
+                                        if(debug)System.out.println("Setting BusinessPartnerID to " + string +" at " + node.getName());
                                         workspace.setbPartner(string);
                                         break;
                                     case "Business Partner ID":
+                                        if(debug)System.out.println("Setting Business Partner ID to " + string +" at " + node.getName());
                                         workspace.setbPartner(string);
                                         break;
                                     case "Mandant":
+                                        if(debug)System.out.println("Setting Mandant to " + string +" at " + node.getName());
                                         workspace.setMandant(string);
                                         break;
                                     default:
@@ -220,15 +234,10 @@ public class MoveRechnungen extends ContentServerTask{
     }
     //Findet den Accounting Ordner im BW
     private Node findAccounting( DocumentManagement docManClient, Node node) {
-        GetNodesInContainerOptions options = new GetNodesInContainerOptions();
-        options.setMaxDepth(1);
-        options.setMaxResults(Integer.MAX_VALUE);
-        List<Node> nodesInBP = docManClient.getNodesInContainer(node.getID(), options);
-        for(Node nodeInBP : nodesInBP) {
-            if(nodeInBP.isIsContainer() && nodeInBP.getName().equals("Accounting")) {
-                logger.debug("Accounting Ordner in " + node.getName() + "(id:"+node.getID() + ") gefunden");
-                return nodeInBP;
-            }
+        Node accounting = docManClient.getNodeByName(node.getID(), "Accounting");
+        if(accounting != null) {
+            logger.debug("Accounting Ordner in " + node.getName() + "(id:"+node.getID() + ") gefunden");
+            return accounting;
         }
         return null;
     }

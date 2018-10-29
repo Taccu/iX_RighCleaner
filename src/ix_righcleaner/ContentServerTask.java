@@ -90,8 +90,6 @@ public abstract class ContentServerTask extends Thread{
         logger.debug("Interrupting thread...");
         Thread.currentThread().interrupt();
     }
-
-   
     
     protected void connectToDatabase(String server, String db) throws ClassNotFoundException, SQLException {
         if(CONNECTION != null && CONNECTION.isValid(10)) return;
@@ -193,6 +191,7 @@ public abstract class ContentServerTask extends Thread{
         return dataIds;
     }
     
+    
     protected CategoryItemsUpgradeInfo chunkIt(CategoryItemsUpgradeInfo nrui){
         try {
         if(nrui.getUpgradedCount() > 0 ) {
@@ -218,7 +217,6 @@ public abstract class ContentServerTask extends Thread{
         }
         return nrui;
     }
-    
     public SOAPHeaderElement generateSOAPHeaderElement(OTAuthentication oauth) throws SOAPException {
         // The namespace of the OTAuthentication object
         final String ECM_API_NAMESPACE = "urn:api.ecm.opentext.com";
@@ -445,39 +443,6 @@ public abstract class ContentServerTask extends Thread{
             } else {
                 logger.info("Finished task " + getNameOfTask() + " in " + elapsedTime + " milliseconds...");
             }
-            /*
-            List<LogRecord> arrayList = new ArrayList<>();
-            logger.getLog().drainCopyTo(arrayList);
-            List<String> logList = new ArrayList<>();
-            arrayList.stream().forEach((myLong) -> {
-                switch(myLong.getLevel()) {
-                    case DEBUG:
-                        logList.add("DEBUG:"+myLong.getMessage());
-                        break;
-                    case WARN:
-                        logList.add("WARN:"+myLong.getMessage());
-                        break;
-                    case INFO:
-                        logList.add("INFO:"+myLong.getMessage());
-                        break;
-                    case ERROR:
-                        logList.add("ERROR:"+myLong.getMessage());
-                        break;
-                    default:
-                        
-                }
-            });
-            try {
-                if(Files.exists(Paths.get("ix-right.log"))) {
-                    Files.delete(Paths.get("ix-right.log"));
-                }
-                Files.createFile(Paths.get("ix-right.log"));
-                
-                Files.write(Paths.get("ix-right.log"),logList,Charset.forName("UTF-8"), StandardOpenOption.APPEND);
-            } catch (IOException ex) {
-                java.util.logging.Logger.getLogger(LogView.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-            }
-            */
         }
     }
     

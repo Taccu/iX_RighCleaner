@@ -35,6 +35,7 @@ public class CreateCategoryForCsv extends ContentServerTask{
     private final Path xmlDir;
     private final ArrayList<TriaScan> items = new ArrayList<>();
     private final Long catName;
+    
     public CreateCategoryForCsv(Logger logger, String user, String password, String xmlDir, String catId, boolean export) {
         super(logger, user, password, export);
         this.xmlDir = Paths.get(xmlDir);

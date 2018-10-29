@@ -5,8 +5,12 @@
  */
 package ix_righcleaner;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import javafx.application.Application;
@@ -36,6 +40,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.converter.IntegerStringConverter;
 
@@ -44,13 +49,16 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField  arch_dbServerField, arch_dbNameField, arch_dirField, arch_destDirField, updater_RightIdField, updater_DBServerField, updater_DBNameField,moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField  iCatSqlField, iCatCatField, iCatDBNameField, iCatDBServerField, arch_dbServerField, arch_dbNameField, arch_dirField, arch_destDirField, updater_RightIdField, updater_DBServerField, updater_DBNameField,moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
     private CheckBox debugField,moveRg_clearClassField,moveRg_excludeCopyField,moveRg_categoriesField,moveRg_inheritField,obTemp_inheritField, exportField, exportParentField, appl_inherit;
     private final TabPane tPane = new TabPane();
     private TaskKeeper tKeeper;
+    private FileChooser iCatFileChooser, iCatMappingFileChooser;
+    private File iCatFile,iCatMappingFile;
+    private final ArrayList<InfoStoreMapping> iCatMapping = new ArrayList<>();
     private boolean checkGlobalFields() {
         if(userField.getText() == null || userField.getText().isEmpty()) {
             
@@ -186,6 +194,26 @@ public class IX_RighCleaner extends Application {
     private boolean checkCategoryTab(){
         if(catVersionField.getText() == null || catVersionField.getText().isEmpty()) return false;
         return !(catField.getText() == null || catField.getText().isEmpty());
+    }
+    
+    private boolean checkICatTab() {
+        if(iCatSqlField == null && iCatSqlField.getText().isEmpty()){
+            return false;
+        }
+        if(iCatCatField == null && iCatCatField.getText().isEmpty()){
+            return false;
+        }
+        if(iCatDBNameField == null && iCatDBNameField.getText().isEmpty()){
+            return false;
+        }
+        if(iCatDBServerField == null && iCatDBServerField.getText().isEmpty()){
+            return false;
+        }
+        if(iCatFile == null && !Files.exists(iCatFile.toPath())) {
+            return false;
+        }
+        
+        return true;
     }
     
     public boolean checkRightTab() {
@@ -369,6 +397,44 @@ public class IX_RighCleaner extends Application {
                         CheckAlreadyArchived arch_1 = new CheckAlreadyArchived(logger, userField.getText(),  passField.getText(), debugField.isSelected(), arch_dbServerField.getText(), arch_dbNameField.getText(), arch_dirField.getText(), arch_destDirField.getText(), exportField.isSelected());
                         tKeeper.addNewTask(arch_1);
                         break;
+                    case "Infostore Cat":
+                        try {
+                            Files.readAllLines(iCatMappingFile.toPath()).stream().forEach(line -> {
+                                InfoStoreMapping map = new InfoStoreMapping();
+                                String[] split1 = line.split(",");
+                                map.setSrc(split1[0]);
+                                switch(split1[1]){
+                                    case "Integer":
+                                        map.setSrcType(Integer.class);
+                                        break;
+                                    case "String":
+                                        map.setSrcType(String.class);
+                                        break;
+                                    case "Date":
+                                        map.setSrcType(Date.class);
+                                        break;
+                                }
+                                map.setDst(split1[2]);
+                                switch(split1[3]){
+                                    case "Integer":
+                                        map.setDstType(Integer.class);
+                                        break;
+                                    case "String":
+                                        map.setDstType(String.class);
+                                        break;
+                                    case "Date":
+                                        map.setDstType(Date.class);
+                                        break;
+                                }
+                                iCatMapping.add(map);
+                            });
+                            InfoCatMod iCat_1 = new InfoCatMod(logger, userField.getText(), passField.getText(), iCatDBServerField.getText(), iCatDBNameField.getText(), iCatFile, iCatSqlField.getText(), iCatMapping, iCatCatField.getText(), debugField.isSelected(),exportField.isSelected());
+                            tKeeper.addNewTask(iCat_1);    
+                        } catch (IOException ex) {
+                            java.util.logging.Logger.getLogger(IX_RighCleaner.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+                        }
+                        break;
+
                     default:
                         logger.error("Something went wrong");
                 }
@@ -505,6 +571,12 @@ public class IX_RighCleaner extends Application {
         arch_dirField = new TextField();
         arch_destDirField = new TextField();
         
+        iCatSqlField = new TextField();
+        iCatCatField = new TextField();
+        iCatDBNameField = new TextField();
+        iCatDBServerField = new TextField();
+        iCatFileChooser = new FileChooser();
+        iCatMappingFileChooser = new FileChooser();
         
         updater_RightIdField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         
@@ -640,6 +712,29 @@ public class IX_RighCleaner extends Application {
         HBox moveRg_mandantBox = new HBox(10, new Label("Mandant Category ID"), moveRg_mandantField);
         moveRg_mandantBox.setPadding(new Insets(5,5,5,5));
         
+        HBox iCatSqlBox = new HBox(10, new Label("SQL Abfrage"), iCatSqlField);
+        iCatSqlBox.setPadding(new Insets(5,5,5,5));
+        HBox iCatCatBox= new HBox(10, new Label("Kategorie ID"), iCatCatField);
+        iCatCatBox.setPadding(new Insets(5,5,5,5));
+        HBox iCatDBNameBox = new HBox(10, new Label("DB Name"), iCatDBNameField);
+        iCatDBNameBox.setPadding(new Insets(5,5,5,5));
+        HBox iCatDBServerBox = new HBox(10, new Label("DB Server"), iCatDBServerField);
+        iCatDBServerBox.setPadding(new Insets(5,5,5,5));
+        Button but = new Button("Benutz mich");
+        but.setOnAction(action -> {
+            iCatFile = iCatFileChooser.showOpenDialog(null);
+            try {
+                Files.readAllLines(iCatFile.toPath()).forEach(line -> {});
+            } catch (IOException ex) {
+                logger.error(ex.getMessage());
+            }
+        });
+        HBox iCatFileChooserBox = new HBox(10, new Label("ID Datei Auswahl"), but);
+        iCatFileChooserBox.setPadding(new Insets(5,5,5,5));
+        Button but2 = new Button("Mich auch");
+        but2.setOnAction(action -> iCatMappingFile = iCatMappingFileChooser.showOpenDialog(null));
+        HBox iCatMappingChooserBox = new HBox(10, new Label("Mapping Datei Auswahl"), but2);
+        iCatMappingChooserBox.setPadding(new Insets(5,5,5,5));
         
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
@@ -656,6 +751,7 @@ public class IX_RighCleaner extends Application {
         Container m = new Container("Search for Objects with Classification");
         Container n = new Container("Check Rights");
         Container o = new Container("Move Error");
+        Container p = new Container("Infostore Cat");
         a.addNode(partitionBox);
         a.addNode(sizeBox);
         a.addNode(up_dbServerBox);
@@ -697,6 +793,12 @@ public class IX_RighCleaner extends Application {
         o.addNode(arch_dbNameBox);
         o.addNode(arch_dirBox);
         o.addNode(arch_destDirBox);
+        p.addNode(iCatDBServerBox);
+        p.addNode(iCatDBNameBox);
+        p.addNode(iCatCatBox);
+        p.addNode(iCatSqlBox);
+        p.addNode(iCatFileChooserBox);
+        p.addNode(iCatMappingChooserBox);
         
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox, debugBox,runBox);
         tPane.getTabs().add(a);
@@ -714,6 +816,7 @@ public class IX_RighCleaner extends Application {
         tPane.getTabs().add(m);
         tPane.getTabs().add(n);
         tPane.getTabs().add(o);
+        tPane.getTabs().add(p);
         SplitPane leftPane = new SplitPane(tPane,bottom);
         leftPane.setOrientation(Orientation.VERTICAL);
         SplitPane root = new SplitPane(leftPane,layout);

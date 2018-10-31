@@ -40,9 +40,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.xml.namespace.QName;
 import javax.xml.soap.MessageFactory;
 import javax.xml.soap.SOAPElement;
@@ -65,6 +68,7 @@ public abstract class ContentServerTask extends Thread{
     public final ArrayList<Long> exportIds = new ArrayList<>();
     public static Connection CONNECTION;
     public static String URL;
+    private static final Semaphore SEMA = new Semaphore(1);
    
     /**
      *
@@ -412,13 +416,21 @@ public abstract class ContentServerTask extends Thread{
     
     @Override
     public void run() {
-        logger.info("Starting...");
+        logger.info("Starting...");         
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                logger.info("Be patient, we are still updating...");
+                try {
+                    SEMA.acquire();
+                    logger.info("Be patient, we are still updating...");
+                    getDocManClient(true);
+                    
+                    SEMA.release();
+                } catch (InterruptedException ex) {
+                    java.util.logging.Logger.getLogger(InfoCatMod.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+                }
             }
-            }, 1*30*1000, 1*60*1000);
+            }, 1*240*1000, 1*240*1000);
         
         long startTime = System.currentTimeMillis();
         try {
@@ -433,6 +445,7 @@ public abstract class ContentServerTask extends Thread{
             }
         }catch(Exception e) {
             logger.error(e.getMessage());
+            e.printStackTrace();
         } finally {
             timer.cancel();
             timer.purge();

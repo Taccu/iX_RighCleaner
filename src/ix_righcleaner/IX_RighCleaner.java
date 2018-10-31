@@ -7,6 +7,7 @@ package ix_righcleaner;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,7 +54,7 @@ public class IX_RighCleaner extends Application {
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
-    private CheckBox debugField,moveRg_clearClassField,moveRg_excludeCopyField,moveRg_categoriesField,moveRg_inheritField,obTemp_inheritField, exportField, exportParentField, appl_inherit;
+    private CheckBox iCatFetchFirstField,debugField,moveRg_clearClassField,moveRg_excludeCopyField,moveRg_categoriesField,moveRg_inheritField,obTemp_inheritField, exportField, exportParentField, appl_inherit;
     private final TabPane tPane = new TabPane();
     private TaskKeeper tKeeper;
     private FileChooser iCatFileChooser, iCatMappingFileChooser;
@@ -399,6 +400,7 @@ public class IX_RighCleaner extends Application {
                         break;
                     case "Infostore Cat":
                         try {
+                            if(iCatMapping.size()>0)iCatMapping.clear();
                             Files.readAllLines(iCatMappingFile.toPath()).stream().forEach(line -> {
                                 InfoStoreMapping map = new InfoStoreMapping();
                                 String[] split1 = line.split(",");
@@ -428,7 +430,7 @@ public class IX_RighCleaner extends Application {
                                 }
                                 iCatMapping.add(map);
                             });
-                            InfoCatMod iCat_1 = new InfoCatMod(logger, userField.getText(), passField.getText(), iCatDBServerField.getText(), iCatDBNameField.getText(), iCatFile, iCatSqlField.getText(), iCatMapping, iCatCatField.getText(), debugField.isSelected(),exportField.isSelected());
+                            InfoCatMod iCat_1 = new InfoCatMod(logger, userField.getText(), passField.getText(), iCatDBServerField.getText(), iCatDBNameField.getText(), iCatFile, iCatSqlField.getText(), iCatMapping, iCatCatField.getText(),iCatFetchFirstField.isSelected(), debugField.isSelected(),exportField.isSelected());
                             tKeeper.addNewTask(iCat_1);    
                         } catch (IOException ex) {
                             java.util.logging.Logger.getLogger(IX_RighCleaner.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
@@ -565,6 +567,7 @@ public class IX_RighCleaner extends Application {
         updater_DBServerField = new TextField();
         updater_DBNameField = new TextField();
         debugField = new CheckBox();
+        iCatFetchFirstField = new CheckBox();
         updater_RightIdField = new TextField();
         arch_dbServerField = new TextField();
         arch_dbNameField = new TextField();
@@ -576,8 +579,17 @@ public class IX_RighCleaner extends Application {
         iCatDBNameField = new TextField();
         iCatDBServerField = new TextField();
         iCatFileChooser = new FileChooser();
+        /*try {
+            iCatFileChooser.setInitialDirectory(new File(IX_RighCleaner.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()));
+        } catch (URISyntaxException ex) {
+            logger.error("Couldn't set initial dir. Forget it -.-");
+        }*/
         iCatMappingFileChooser = new FileChooser();
-        
+        /*try {
+            iCatMappingFileChooser.setInitialDirectory(new File(IX_RighCleaner.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()));
+        } catch (URISyntaxException ex) {
+            logger.error("Couldn't set initial dir. Forget it -.-");
+        }*/
         updater_RightIdField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         
         moveRg_mandantField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -723,11 +735,6 @@ public class IX_RighCleaner extends Application {
         Button but = new Button("Benutz mich");
         but.setOnAction(action -> {
             iCatFile = iCatFileChooser.showOpenDialog(null);
-            try {
-                Files.readAllLines(iCatFile.toPath()).forEach(line -> {});
-            } catch (IOException ex) {
-                logger.error(ex.getMessage());
-            }
         });
         HBox iCatFileChooserBox = new HBox(10, new Label("ID Datei Auswahl"), but);
         iCatFileChooserBox.setPadding(new Insets(5,5,5,5));
@@ -735,6 +742,8 @@ public class IX_RighCleaner extends Application {
         but2.setOnAction(action -> iCatMappingFile = iCatMappingFileChooser.showOpenDialog(null));
         HBox iCatMappingChooserBox = new HBox(10, new Label("Mapping Datei Auswahl"), but2);
         iCatMappingChooserBox.setPadding(new Insets(5,5,5,5));
+        HBox iCatFetchFirstBox = new HBox(10, new Label("Fetch data first"), iCatFetchFirstField);
+        iCatFetchFirstField.setPadding(new Insets(5,5,5,5));
         
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
@@ -799,6 +808,7 @@ public class IX_RighCleaner extends Application {
         p.addNode(iCatSqlBox);
         p.addNode(iCatFileChooserBox);
         p.addNode(iCatMappingChooserBox);
+        p.addNode(iCatFetchFirstBox);
         
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox, debugBox,runBox);
         tPane.getTabs().add(a);

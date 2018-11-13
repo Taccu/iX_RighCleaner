@@ -7,7 +7,6 @@ package ix_righcleaner;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,7 +49,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField  iCatSqlField, iCatCatField, iCatDBNameField, iCatDBServerField, arch_dbServerField, arch_dbNameField, arch_dirField, arch_destDirField, updater_RightIdField, updater_DBServerField, updater_DBNameField,moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField  remOwn_idField,iCatSqlField, iCatCatField, iCatDBNameField, iCatDBServerField, arch_dbServerField, arch_dbNameField, arch_dirField, arch_destDirField, updater_RightIdField, updater_DBServerField, updater_DBNameField,moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
@@ -213,7 +212,6 @@ public class IX_RighCleaner extends Application {
         if(iCatFile == null && !Files.exists(iCatFile.toPath())) {
             return false;
         }
-        
         return true;
     }
     
@@ -254,7 +252,6 @@ public class IX_RighCleaner extends Application {
                 if(!checkGlobalFields()) {
                     return;
                 }
-                
                 String[] split;
                 List<String> stringList;
                 ArrayList<Long> folderIds;
@@ -436,7 +433,15 @@ public class IX_RighCleaner extends Application {
                             java.util.logging.Logger.getLogger(IX_RighCleaner.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
                         }
                         break;
-
+                    case "Remove Owner Permissions":
+                        ArrayList<Long> ids = new ArrayList<>();
+                        String[] split1 = remOwn_idField.getText().split(",");
+                        for(String string : split1) {
+                            ids.add(Long.valueOf(string));
+                        }
+                        RemoveOwnerPermissions remOwner_1 = new RemoveOwnerPermissions(logger, userField.getText(), passField.getText(), ids, debugField.isSelected(), exportField.isSelected());
+                        tKeeper.addNewTask(remOwner_1);
+                        break;
                     default:
                         logger.error("Something went wrong");
                 }
@@ -472,6 +477,7 @@ public class IX_RighCleaner extends Application {
                 updater_DBServerField.clear();
                 updater_DBNameField.clear();
                 updater_RightIdField.clear();
+                remOwn_idField.clear();
                 //appl_inherit;
             }
         });
@@ -590,6 +596,8 @@ public class IX_RighCleaner extends Application {
         } catch (URISyntaxException ex) {
             logger.error("Couldn't set initial dir. Forget it -.-");
         }*/
+        remOwn_idField = new TextField();
+        
         updater_RightIdField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         
         moveRg_mandantField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -745,6 +753,9 @@ public class IX_RighCleaner extends Application {
         HBox iCatFetchFirstBox = new HBox(10, new Label("Fetch data first"), iCatFetchFirstField);
         iCatFetchFirstField.setPadding(new Insets(5,5,5,5));
         
+        HBox remOwn_idBox = new HBox(10, new Label("IDs"), remOwn_idField);
+        remOwn_idBox.setPadding(new Insets(5,5,5,5));
+        
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
         Container c = new Container("Update with Item ID");
@@ -761,6 +772,7 @@ public class IX_RighCleaner extends Application {
         Container n = new Container("Check Rights");
         Container o = new Container("Move Error");
         Container p = new Container("Infostore Cat");
+        Container r = new Container("Remove Owner Permissions");
         a.addNode(partitionBox);
         a.addNode(sizeBox);
         a.addNode(up_dbServerBox);
@@ -809,7 +821,7 @@ public class IX_RighCleaner extends Application {
         p.addNode(iCatFileChooserBox);
         p.addNode(iCatMappingChooserBox);
         p.addNode(iCatFetchFirstBox);
-        
+        r.addNode(remOwn_idBox);
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox, debugBox,runBox);
         tPane.getTabs().add(a);
         tPane.getTabs().add(b);
@@ -827,6 +839,7 @@ public class IX_RighCleaner extends Application {
         tPane.getTabs().add(n);
         tPane.getTabs().add(o);
         tPane.getTabs().add(p);
+        tPane.getTabs().add(r);
         SplitPane leftPane = new SplitPane(tPane,bottom);
         leftPane.setOrientation(Orientation.VERTICAL);
         SplitPane root = new SplitPane(leftPane,layout);

@@ -40,12 +40,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicInteger;
 import javax.xml.namespace.QName;
 import javax.xml.soap.MessageFactory;
 import javax.xml.soap.SOAPElement;
@@ -89,8 +87,8 @@ public abstract class ContentServerTask extends Thread{
     }
     
     protected void handleError(Exception e) {
-        logger.error(e.getMessage());
         e.printStackTrace();
+        logger.error(e.getMessage());
         logger.debug("Interrupting thread...");
         Thread.currentThread().interrupt();
     }

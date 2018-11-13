@@ -11,5 +11,5 @@ package ix_righcleaner;
  */
 public interface ContentServerOperation {
     
-    abstract public void doIt();
+    abstract public void doSingleInstruction();
 }

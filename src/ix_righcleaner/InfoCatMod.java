@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -43,11 +42,10 @@ public class InfoCatMod extends ContentServerTask{
     final File idFile;
     final HashSet<Long> longIds = new HashSet<>();
     private final ArrayList<InfoStoreMapping> mapping;
-    private SimpleDateFormat dFormat = new SimpleDateFormat();
     private final boolean debug, fetchAllFirst;
-    private AtomicInteger counter = new AtomicInteger();
+    private final AtomicInteger counter = new AtomicInteger();
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-    private ResultSet fetchedResults;
+    private ArrayList<SuperResult> fetchedResults;
     public InfoCatMod(Logger logger, String user, String password,String dbServer, String dbName, File idFile,String sql, ArrayList<InfoStoreMapping> mapping, String catId, boolean fetchAllFirst, boolean debug, boolean export) {
         super(logger, user, password, export);
         this.dbServer = dbServer;
@@ -84,7 +82,7 @@ public class InfoCatMod extends ContentServerTask{
                         longIds.add(Long.valueOf(number));
                     });
         } catch (IOException ex) {
-            java.util.logging.Logger.getLogger(InfoCatMod.class.getName()).log(Level.SEVERE, null, ex);
+            handleError(ex);
         }
         try {
             connectToDatabase(dbServer, dbName);
@@ -93,7 +91,11 @@ public class InfoCatMod extends ContentServerTask{
         }
         if(fetchAllFirst) {
             logger.info("Fetching data first...");
-            fetchedResults = fetchAllFirst();
+            try {
+                fetchedResults = readAll(fetchAllFirst());
+            } catch (SQLException ex) {
+                handleError(ex);
+            }
         }
         ForkJoinPool fPool = new ForkJoinPool(50);
         try {
@@ -114,48 +116,40 @@ public class InfoCatMod extends ContentServerTask{
             logger.error(ex.getLocalizedMessage());
         }
     }
-    
-    private ResultSet fetchAllFirst() {
-        try {
-            PreparedStatement ps = CONNECTION.prepareStatement(sql);
-            //ps.setString(1, String.valueOf(node.getID()));
-            return ps.executeQuery();
-        } catch (SQLException ex) {
-            logger.error(ex.getLocalizedMessage());
-            if(debug)ex.printStackTrace();
-        }
-        return null;
-    }
-    private void modifyCategory(Node node, ResultSet rs) {
-        try {
-            ResultSet rsT = rs;
-            while(rsT.next()) {
-                mapping.stream().forEach(map -> {
+    private ArrayList<SuperResult> readAll(ResultSet rsT) throws SQLException{
+        ArrayList<SuperResult>  fillme = new ArrayList<>();
+        while(rsT.next()) {
+            SuperResult superDuper = new SuperResult();
+            ArrayList<Result> littleMe = new ArrayList<>();
+            superDuper.setDataId(Long.valueOf(rsT.getString("ID")));
+            mapping.stream().forEach(map -> {
+                Result result = new Result();
                     try {
                         //Map the result from the key to the value
-                        Metadata newData = getDocManClient().getNode(node.getID()).getMetadata();
                         switch(map.getSrcType().getSimpleName()) {
                             case "String":
                                 String sValue = rsT.getString(map.getSrc());
                                 switch(map.getDstType().getSimpleName()) {
                                     case "String":
-                                        newData = modifyMData(newData, catId, map.getDst(), sValue);
-                                        if(debug)System.out.println("S2S:Setting " + sValue + " at " + map.getDst() + " to " + map.getDst());
+                                        result.setResult_type(0);
+                                        result.setVar_String(sValue);
                                         break;
                                     case "Integer":
+                                        result.setResult_type(1);
+                                        result.setVar_Int(Integer.valueOf(sValue));
                                     case "Long":
-                                        newData = modifyMData(newData, catId, map.getDst(), Long.valueOf(sValue));
-                                        if(debug)System.out.println("S2L:Setting " + sValue + " at " + map.getDst() + " to " + map.getDst());
+                                        result.setResult_type(2);
+                                        result.setVar_Long(Long.valueOf(sValue));
                                         break;
                                     case "Date":
+                                        result.setResult_type(3);
                                         try {
-                                            newData = modifyMData(newData, catId, map.getDst(), sdf.parse(sValue));
+                                            result.setVar_Date(sdf.parse(sValue));
                                             if(debug)System.out.println("S2D:Setting " + sValue + " at " + map.getDst() + " to " + map.getDst());
                                         } catch (ParseException ex) {
                                             logger.error("Couldn't parse " + sValue +". The error was "+ex);
                                         }
                                         break;
-
                                     default:
                                         //blabla
                                 }
@@ -164,17 +158,18 @@ public class InfoCatMod extends ContentServerTask{
                                 Integer iValue = rsT.getInt(map.getSrc());
                                 switch(map.getDstType().getSimpleName()) {
                                     case "String":
-                                        newData = modifyMData(newData, catId, map.getDst(), String.valueOf(iValue));
-                                        if(debug)System.out.println("I2S:Setting " + String.valueOf(iValue) + " at " + map.getDst() + " to " + map.getDst());
+                                        result.setResult_type(0);
+                                        result.setVar_String(String.valueOf(iValue));
                                         break;
                                     case "Integer":
                                     case "Long":
-                                        newData = modifyMData(newData, catId, map.getDst(), Long.valueOf(iValue));
-                                        if(debug)System.out.println("I2L:Setting " + iValue + " at " + map.getDst() + " to " + map.getDst());
+                                        result.setResult_type(0);
+                                        result.setVar_Long(Long.valueOf(iValue));
                                         break;
                                     case "Date":
                                         try {
-                                            newData = modifyMData(newData, catId, map.getDst(), sdf.parse(String.valueOf(iValue)));
+                                            result.setResult_type(3);
+                                            result.setVar_Date(sdf.parse(String.valueOf(iValue)));
                                             if(debug)System.out.println("Setting " + sdf.format(sdf.parse(String.valueOf(iValue))) + " at " + map.getDst() + " to " + map.getDst());
                                         } catch (ParseException ex) {
                                             logger.error("Couldn't parse " + iValue +". The error was "+ex);
@@ -185,20 +180,24 @@ public class InfoCatMod extends ContentServerTask{
                                 }
                                 break;
                             case "Long":
-                                newData = modifyMData(newData, catId, map.getDst(),rsT.getLong(map.getSrc()));
+                                result.setResult_type(2);
+                                result.setVar_Long(rsT.getLong(map.getSrc()));
                                 break;
                             case "Date":
                                 Date dValue = rsT.getDate(map.getSrc());
                                 switch(map.getDstType().getSimpleName()) {
                                     case "String":
-                                        newData = modifyMData(newData, catId, map.getDst(), sdf.format(dValue));
+                                        result.setResult_type(0);
+                                        result.setVar_String(sdf.format(dValue));
                                         break;
                                     case "Integer":
                                     case "Long":
-                                        newData = modifyMData(newData, catId, map.getDst(), dValue.getTime());
+                                        result.setResult_type(2);
+                                        result.setVar_Long(dValue.getTime());
                                         break;
                                     case "Date":
-                                        newData = modifyMData(newData, catId, map.getDst(),dValue);
+                                        result.setResult_type(3);
+                                        result.setVar_Date(dValue);
                                         break;
                                     default:
                                         //blabla
@@ -207,16 +206,72 @@ public class InfoCatMod extends ContentServerTask{
                             default:
                                 //do nothing
                         }
-                        setCategoryInfoToNode(node, newData);
                     } catch (SQLException ex) {
                         handleError(ex);
-                    } 
+                    }
+                    result.setResultColumn(map.getSrc());
+                    littleMe.add(result);
                 });
-                break;
+            superDuper.setResults(littleMe);
+            fillme.add(superDuper);
             }
+        return fillme;
+    }
+    private ResultSet fetchAllFirst() {
+        try {
+            PreparedStatement ps = CONNECTION.prepareStatement(sql); 
+            //ps.setString(1, String.valueOf(node.getID()));
+            return ps.executeQuery();
         } catch (SQLException ex) {
-            java.util.logging.Logger.getLogger(InfoCatMod.class.getName()).log(Level.SEVERE, null, ex);
+            if(debug)ex.printStackTrace();
+            handleError(ex);
         }
+        return null;
+    }
+    private void modifyCategory(Node node, ArrayList<SuperResult>  rs) {
+        rs.stream().forEach(result -> {
+            if(result.getDataId() != node.getID())return;
+            logger.debug("Processing Node " + node.getName()+"(id:" + node.getID() +")...");
+            //Map the result from the key to the value
+            Metadata newData = getDocManClient().getNode(node.getID()).getMetadata();
+            for(InfoStoreMapping map : mapping) {
+                switch(map.getDstType().getSimpleName()) {
+                    case "String":
+                        String sValue = "";
+                        for(Result res : result.getResults()) {
+                            if(res.getResultColumn().equals(map.getSrc()))sValue = res.getVar_String().trim();
+                        }
+                        newData = modifyMData(newData, catId, map.getDst(), sValue);
+                        if(debug)System.out.println("S2S:Setting " + sValue + " at " + map.getDst() + " to " + map.getDst());
+                        break;
+                    case "Integer":
+                        Integer iValue = 0;
+                        for(Result res : result.getResults()) {
+                            if(res.getResultColumn().equals(map.getSrc()))iValue = res.getVar_Int();
+                        }
+                        newData = modifyMData(newData, catId, map.getDst(), Long.valueOf(iValue));
+                        if(debug)System.out.println("I2L:Setting " + iValue + " at " + map.getDst() + " to " + map.getDst());
+                        break;
+                    case "Long":
+                        Long lValue = null;
+                        for(Result res : result.getResults()) {
+                            if(res.getResultColumn().equals(map.getSrc()))lValue = res.getVar_Long();
+                        }
+                        newData = modifyMData(newData, catId, map.getDst(),lValue);
+                        break;
+                    case "Date":
+                        Date dValue = null;
+                        for(Result res : result.getResults()) {
+                            if(res.getResultColumn().equals(map.getSrc()))dValue = res.getVar_Date();
+                        }
+                        newData = modifyMData(newData, catId, map.getDst(),dValue);
+                        break;
+                    default:
+                        //do nothing
+                }
+            }
+            setCategoryInfoToNode(node, newData);
+        });
     }
     private void modifyCategory(Node node) {
         try {

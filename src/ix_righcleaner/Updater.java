@@ -120,7 +120,7 @@ public class Updater extends ContentServerTask{
    
     private List<Long> newestWay(long baseId, List<Long> subTypes, String dbServer, String dbName) {
         try {
-            return getNodeIdsInContainer(baseId, subTypes, dbServer, dbName);
+            return getNodeIdsInContainer(baseId,  dbServer, dbName);
         } catch (ClassNotFoundException | SQLException ex) {
             logger.error(ex.getMessage());
         }

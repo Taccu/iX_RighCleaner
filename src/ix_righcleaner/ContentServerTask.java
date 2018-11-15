@@ -85,27 +85,23 @@ public abstract class ContentServerTask extends Thread{
     public void setProcessedItems(int items) {
         processedItems = items;
     }
-    
     protected void handleError(Exception e) {
         e.printStackTrace();
         logger.error(e.getMessage());
         logger.debug("Interrupting thread...");
         Thread.currentThread().interrupt();
     }
-    
     protected void connectToDatabase(String server, String db) throws ClassNotFoundException, SQLException {
         if(CONNECTION != null && CONNECTION.isValid(10)) return;
         URL = "jdbc:sqlserver://"+server +";databaseName=" +db+";integratedSecurity=true";
         Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
         CONNECTION = DriverManager.getConnection(URL);
     }
-    
     protected void applyRights(DocumentManagement docManClient, Node from, Node to) {
         logger.info("Setting node rights from node " + from.getName() + "(id:" + from.getID() +")" + " to node " + to.getName() + "(id:" + to.getID() + ")");
         docManClient.setNodeRights(to.getID(), docManClient.getNodeRights(from.getID()));
         
     }
-    
     protected void inheritRights(DocumentManagement docManClient, Node from){
         logger.info("Inheriting node right from node "+ from.getName() + "(id:" + from.getID() +")" );
         ChunkedOperationContext updateNodeRightsContext = docManClient.updateNodeRightsContext(from.getID(), RightOperation.ADD_REPLACE, docManClient.getNodeRights(from.getID()).getACLRights(), RightPropagation.TARGET_AND_CHILDREN);
@@ -117,7 +113,6 @@ public abstract class ContentServerTask extends Thread{
             e.printStackTrace();
         }
     }
-    
     protected List<Long> getNodesInContainerWithRightId(long baseId, List<Long> subTypes, String dbServer, String dbName, long rightId) throws ClassNotFoundException, SQLException{
         List<Long> dataIds = new ArrayList<>();
         connectToDatabase(dbServer, dbName);
@@ -160,8 +155,7 @@ public abstract class ContentServerTask extends Thread{
         }
         return dataIds;
     }
-    
-    protected List<Long> getNodeIdsInContainer(long baseId, List<Long> subTypes, String dbServer, String dbName) throws ClassNotFoundException, SQLException {
+    protected List<Long> getNodeIdsInContainer(long baseId, String dbServer, String dbName) throws ClassNotFoundException, SQLException {
         List<Long> dataIds = new ArrayList<>();
         connectToDatabase(dbServer, dbName);
         PreparedStatement ps = CONNECTION.prepareStatement("WITH DCTE AS\n" +
@@ -192,8 +186,6 @@ public abstract class ContentServerTask extends Thread{
         }
         return dataIds;
     }
-    
-    
     protected CategoryItemsUpgradeInfo chunkIt(CategoryItemsUpgradeInfo nrui){
         try {
         if(nrui.getUpgradedCount() > 0 ) {
@@ -208,7 +200,6 @@ public abstract class ContentServerTask extends Thread{
         }
             return nrui;
     }
-    
     protected NodeRightUpdateInfo chunkIt(NodeRightUpdateInfo nrui, ChunkedOperationContext context){
         if(!context.isFinished()) {
             logger.debug("Updated " + nrui.getTotalNodeCount() + " items...");
@@ -236,14 +227,13 @@ public abstract class ContentServerTask extends Thread{
         authTokenElement.addTextNode(oauth.getAuthenticationToken());
         return otAuthElement;
     }
-    
     public OTAuthentication loginUserWithPassword(String user, String password) {
         String authToken;
         try {
             if(OT_AUTH.getAuthenticationToken() == null || OT_AUTH.getAuthenticationToken().isEmpty()) {
                 Authentication_Service authService = new Authentication_Service();
                 Authentication authClient = authService.getBasicHttpBindingAuthentication();
-                authToken = authClient.authenticateUser(user , password);
+                authToken = authClient.authenticateUser(user, password);
                 // Create the OTAuthentication object and set the authentication token
                 OT_AUTH.setAuthenticationToken(authToken);
             }
@@ -251,8 +241,7 @@ public abstract class ContentServerTask extends Thread{
             handleError(e);
         }
         return OT_AUTH;
-    }
-    
+    } 
     public OTAuthentication loginUserWithPassword(String user, String password, boolean force) {
         String authToken;
         try {
@@ -274,8 +263,7 @@ public abstract class ContentServerTask extends Thread{
             handleError(e);
         }
         return OT_AUTH;
-    }
-    
+    }  
     public static void writeArrayToPath(List<Long> list, Path path) throws IOException {
         List<String> arrayList = new ArrayList<>(list.size());
         list.stream().forEach((myLong) -> {
@@ -283,7 +271,6 @@ public abstract class ContentServerTask extends Thread{
         });
         Files.write(path,arrayList,Charset.defaultCharset());
     }  
-    
     public DocumentManagement getDocManClient() {
         // Create the DocumentManagement service client
         try {
@@ -300,7 +287,6 @@ public abstract class ContentServerTask extends Thread{
         }
         return null;
     }
-    
     public DocumentManagement getDocManClient(boolean force) {
         // Create the DocumentManagement service client
         try {
@@ -316,7 +302,6 @@ public abstract class ContentServerTask extends Thread{
         }
         return null;
     }
-    
     public MemberService getMsClient() {
         try {
             MemberService_Service memServService = new MemberService_Service();
@@ -330,7 +315,6 @@ public abstract class ContentServerTask extends Thread{
         }
         return null;
     }
-    
     public MemberService getMsClient(boolean force) {
         try {
             MemberService_Service memServService = new MemberService_Service();
@@ -344,7 +328,6 @@ public abstract class ContentServerTask extends Thread{
         }
         return null;
     }
-        
     public Classifications getClassifyClient() {
         // Create the DocumentManagement service client
         try {
@@ -359,8 +342,7 @@ public abstract class ContentServerTask extends Thread{
             handleError(e);
         }
         return null;
-    }
-    
+    }  
     public SearchService getSearchClient(){
         try {
             SearchService_Service seServService = new SearchService_Service();
@@ -375,8 +357,7 @@ public abstract class ContentServerTask extends Thread{
             handleError(e);
         }
         return null;
-    }
-           
+    }  
     public List<Long> getNodesBySearch(SearchService sService, String queryString){
         SingleSearchRequest query = new SingleSearchRequest();
         List<String> dataCollections = sService.getDataCollections();
@@ -407,11 +388,9 @@ public abstract class ContentServerTask extends Thread{
         }
        return nodes;
     }
-    
     private String extractId(String string){
         return string.replaceAll("(.*)DataId=", "").replaceAll("&(.*)", "");
     }
-    
     @Override
     public void run() {
         logger.info("Starting...");         
@@ -456,7 +435,6 @@ public abstract class ContentServerTask extends Thread{
             }
         }
     }
-    
     public abstract void doWork() throws InterruptedException;
     public abstract String getNameOfTask();
 }

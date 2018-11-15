@@ -49,7 +49,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField  remOwn_idField,iCatSqlField, iCatCatField, iCatDBNameField, iCatDBServerField, arch_dbServerField, arch_dbNameField, arch_dirField, arch_destDirField, updater_RightIdField, updater_DBServerField, updater_DBNameField,moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField movVer_dbServer,movVer_dbName, movVer_sourceFolder, movVer_dstFolder, remNodes_idField,remOwn_idField,iCatSqlField, iCatCatField, iCatDBNameField, iCatDBServerField, arch_dbServerField, arch_dbNameField, arch_dirField, arch_destDirField, updater_RightIdField, updater_DBServerField, updater_DBNameField,moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
@@ -68,6 +68,19 @@ public class IX_RighCleaner extends Application {
             return false;
         }
         return groupField.getText() != null;
+    }
+    
+    private boolean checkMoveVerkauf() {
+        if(movVer_dbServer.getText() == null || movVer_dbServer.getText().isEmpty()) {
+            return false;
+        }
+        if(movVer_dbName.getText() == null || movVer_dbName.getText().isEmpty()) {
+            return false;
+        }
+        if(movVer_sourceFolder.getText() == null || movVer_sourceFolder.getText().isEmpty()) {
+            return false;
+        }
+        return movVer_dstFolder.getText() != null;
     }
     
     private boolean checkArchTab() {
@@ -387,10 +400,16 @@ public class IX_RighCleaner extends Application {
                         SearchForClassi searchClass_1 = new SearchForClassi(logger, userField.getText(), passField.getText(), 556887l , exportField.isSelected());
                         tKeeper.addNewTask(searchClass_1);
                         break;
-                    case "Check Rights":
-                        ControlRights cRights_1 = new ControlRights(logger, userField.getText(), passField.getText(), exportField.isSelected());
+                    case "Remove Nodes":
+                        String[] remNodes_split = remNodes_idField.getText().split(",");
+                        ArrayList<Long> remNodes_id = new ArrayList<>();
+                        for(String string : remNodes_split) {
+                            remNodes_id.add(Long.valueOf(string));
+                        }
+                        RemoveNodes cRights_1 = new RemoveNodes(logger, userField.getText(), passField.getText(), remNodes_id,debugField.isSelected(), exportField.isSelected());
                         tKeeper.addNewTask(cRights_1);
                         break;
+
                     case "Move Error":
                         CheckAlreadyArchived arch_1 = new CheckAlreadyArchived(logger, userField.getText(),  passField.getText(), debugField.isSelected(), arch_dbServerField.getText(), arch_dbNameField.getText(), arch_dirField.getText(), arch_destDirField.getText(), exportField.isSelected());
                         tKeeper.addNewTask(arch_1);
@@ -442,6 +461,10 @@ public class IX_RighCleaner extends Application {
                         RemoveOwnerPermissions remOwner_1 = new RemoveOwnerPermissions(logger, userField.getText(), passField.getText(), ids, debugField.isSelected(), exportField.isSelected());
                         tKeeper.addNewTask(remOwner_1);
                         break;
+                    case "Move Verkauf":
+                        MoveVerkauf moveVerkauf_1 = new MoveVerkauf(logger, userField.getText(), passField.getText(), movVer_dbServer.getText(), movVer_dbName.getText(), Long.valueOf(movVer_sourceFolder.getText()), Long.valueOf(movVer_dstFolder.getText()), debugField.isSelected(), exportField.isSelected());
+                        tKeeper.addNewTask(moveVerkauf_1);
+                        break;
                     default:
                         logger.error("Something went wrong");
                 }
@@ -478,6 +501,11 @@ public class IX_RighCleaner extends Application {
                 updater_DBNameField.clear();
                 updater_RightIdField.clear();
                 remOwn_idField.clear();
+                remNodes_idField.clear();
+                movVer_dbServer.clear();
+                movVer_dbName.clear();
+                movVer_sourceFolder.clear();
+                movVer_dstFolder.clear();
                 //appl_inherit;
             }
         });
@@ -585,6 +613,8 @@ public class IX_RighCleaner extends Application {
         iCatDBNameField = new TextField();
         iCatDBServerField = new TextField();
         iCatFileChooser = new FileChooser();
+        
+        remNodes_idField = new TextField();
         /*try {
             iCatFileChooser.setInitialDirectory(new File(IX_RighCleaner.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()));
         } catch (URISyntaxException ex) {
@@ -598,6 +628,11 @@ public class IX_RighCleaner extends Application {
         }*/
         remOwn_idField = new TextField();
         
+        movVer_dbServer = new TextField();
+        movVer_dbName = new TextField();
+        movVer_sourceFolder = new TextField();
+        movVer_dstFolder = new TextField();
+                
         updater_RightIdField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         
         moveRg_mandantField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -756,6 +791,18 @@ public class IX_RighCleaner extends Application {
         HBox remOwn_idBox = new HBox(10, new Label("IDs"), remOwn_idField);
         remOwn_idBox.setPadding(new Insets(5,5,5,5));
         
+        HBox remNodes_idBox = new HBox(10, new Label("IDs"), remNodes_idField);
+        remNodes_idBox.setPadding(new Insets(5,5,5,5));
+        
+        HBox movVer_dbServerBox = new HBox(10, new Label("DBServer"), movVer_dbServer);
+        movVer_dbServerBox.setPadding(new Insets(5,5,5,5));
+        HBox movVer_dbNameBox = new HBox(10, new Label("DBName"), movVer_dbName);
+        movVer_dbNameBox.setPadding(new Insets(5,5,5,5));
+        HBox movVer_sourceFolderBox = new HBox(10, new Label("Quell Ordner ID"), movVer_sourceFolder);
+        movVer_sourceFolderBox.setPadding(new Insets(5,5,5,5));
+        HBox movVer_dstFolderBox = new HBox(10, new Label("Ziel Ordner ID"), movVer_dstFolder);
+        movVer_dstFolderBox.setPadding(new Insets(5,5,5,5));
+        
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
         Container c = new Container("Update with Item ID");
@@ -769,10 +816,11 @@ public class IX_RighCleaner extends Application {
         Container k = new Container("Remove Category based on folder");
         Container l = new Container("Move Rechnungen based on Category");
         Container m = new Container("Search for Objects with Classification");
-        Container n = new Container("Check Rights");
+        Container n = new Container("Remove Nodes");
         Container o = new Container("Move Error");
         Container p = new Container("Infostore Cat");
         Container r = new Container("Remove Owner Permissions");
+        Container s = new Container("Move Verkauf");
         a.addNode(partitionBox);
         a.addNode(sizeBox);
         a.addNode(up_dbServerBox);
@@ -810,6 +858,7 @@ public class IX_RighCleaner extends Application {
         l.addNode(moveRg_categoriesBox);
         l.addNode(moveRg_excludeCopyBox);
         l.addNode(moveRg_clearClassBox);
+        n.addNode(remNodes_idBox);
         o.addNode(arch_dbServerBox);
         o.addNode(arch_dbNameBox);
         o.addNode(arch_dirBox);
@@ -822,6 +871,10 @@ public class IX_RighCleaner extends Application {
         p.addNode(iCatMappingChooserBox);
         p.addNode(iCatFetchFirstBox);
         r.addNode(remOwn_idBox);
+        s.addNode(movVer_dbServerBox);
+        s.addNode(movVer_dbNameBox);
+        s.addNode(movVer_sourceFolderBox);
+        s.addNode(movVer_dstFolderBox);
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox, debugBox,runBox);
         tPane.getTabs().add(a);
         tPane.getTabs().add(b);
@@ -840,6 +893,7 @@ public class IX_RighCleaner extends Application {
         tPane.getTabs().add(o);
         tPane.getTabs().add(p);
         tPane.getTabs().add(r);
+        tPane.getTabs().add(s);
         SplitPane leftPane = new SplitPane(tPane,bottom);
         leftPane.setOrientation(Orientation.VERTICAL);
         SplitPane root = new SplitPane(leftPane,layout);

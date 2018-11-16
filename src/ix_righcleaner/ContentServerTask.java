@@ -275,6 +275,7 @@ public abstract class ContentServerTask extends Thread{
         // Create the DocumentManagement service client
         try {
             DocumentManagement_Service docManService = new DocumentManagement_Service();
+            
             DocumentManagement docManClient = docManService.getBasicHttpBindingDocumentManagement();
             SOAPHeaderElement header;
             header = generateSOAPHeaderElement(loginUserWithPassword(user, password));

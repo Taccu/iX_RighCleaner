@@ -33,13 +33,17 @@ public class MoveVerkauf extends ContentServerTask{
     private final Long sourceFolder,dstFolder;
     private final DecimalFormat df = new DecimalFormat("0.00##");
     private ExecutorService executor;
-    public MoveVerkauf(Logger logger,String user, String password,String dbServer, String dbName, Long sourceFolder, Long dstFolder, boolean debug, boolean export) {
+    private final int partitionSize,parallelThreads;
+    private Long threadId = 0l;
+    public MoveVerkauf(Logger logger,String user, String password,String dbServer, String dbName, Long sourceFolder, Long dstFolder,int partitionSize,int parallelThreads, boolean debug, boolean export) {
         super(logger, user, password, export);
         this.debug = debug;
         this.dbServer = dbServer;
         this.dbName = dbName;
         this.sourceFolder = sourceFolder;
         this.dstFolder = dstFolder;
+        this.partitionSize = partitionSize;
+        this.parallelThreads = parallelThreads;
     }
         
     @Override
@@ -60,14 +64,14 @@ public class MoveVerkauf extends ContentServerTask{
             return;
         }
         logger.debug("Total nodes:" + nodeIds.size());
-        List<List<Long>> partitions = partition(nodeIds, 50);
-        executor = Executors.newFixedThreadPool(10);
+        List<List<Long>> partitions = partition(nodeIds, partitionSize);
+        executor = Executors.newFixedThreadPool(parallelThreads);
         CompletionService<List<Long>>  completionService =
                 new ExecutorCompletionService<>(executor);
         long startTime = System.currentTimeMillis();
-        partitions.stream().parallel().forEach(partition -> {
+        partitions.stream().forEach(partition -> {
             logger.info("Creating new parition thread with " +partition.size());
-            completionService.submit(new MoveVerkauf.UpdateNodes(partition,debug,dstFolder));
+            completionService.submit(new MoveVerkauf.UpdateNodes(partition,debug,dstFolder,threadId++));
         });
         //Help with gc
         int partitionCount = partitions.size();
@@ -81,7 +85,7 @@ public class MoveVerkauf extends ContentServerTask{
                 Future<List<Long>> resultFuture = completionService.take();
                 exportIds.addAll(resultFuture.get());
                 received ++;
-                logger.info("Document remaining: " + 50*(partitionCount-received) + ". Approx. " + df.format(calcTimeLeft(startTime, partitionCount, received)) + " minutes left");
+                logger.info("Document remaining: " + partitionSize*(partitionCount-received) + ". Approx. " + df.format(calcTimeLeft(startTime, partitionCount, received)) + " minutes left");
                 logger.info("Completed " + received + "/" + partitionCount +" partitons: " + df.format((100.00 * received/ partitionCount)) + "%...");
             } catch(Exception e) {
                 logger.error(e.getMessage());
@@ -105,12 +109,13 @@ public class MoveVerkauf extends ContentServerTask{
         private final List<Long> partition;
         private final List<Long> processedIds = new ArrayList<>();
         private final boolean debug;
-        private final Long dstId;
+        private final Long dstId,threadId;
         private DocumentManagement docManClient;
-        public UpdateNodes(List<Long> partition, boolean debug, Long dstId ) {
+        public UpdateNodes(List<Long> partition, boolean debug, Long dstId, Long threadId) {
             this.partition = partition;
             this.debug = debug;
             this.dstId = dstId;
+            this.threadId = threadId;
         }
 
         @Override
@@ -130,16 +135,21 @@ public class MoveVerkauf extends ContentServerTask{
             mOptions.setForceInheritPermissions(true);
             mOptions.setAddVersion(false);
             mOptions.setAttrSourceType(AttributeSourceType.ORIGINAL);
-            partition.stream().parallel()
+            partition.stream()
                 .forEach(nodeId -> {
                     int count = 0;
                     int maxTries = 3;
                     while(true) {
                         try {
+                            long startTime = System.currentTimeMillis();
                             Node node = docManClient.getNode(nodeId);
                             if(node==null) return;
-                            if(debug)logger.debug("Moving " + node.getName() + "(id:" + node.getID() + ") to " + dstId);
+                            if(node.getID()==dstId) return;
+                            if(node.isIsContainer()) return;
                             if(!debug)docManClient.moveNode(nodeId, dstId, node.getName(), mOptions);
+                            long stopTime = System.currentTimeMillis();
+                            long elapsedTime = stopTime - startTime;
+                            logger.debug(threadId+ ": Moved " + node.getName() + "(id:" + node.getID() + ") to " + dstId +" in " + elapsedTime + " milliseconds...");
                             break;
                         } catch(ServerSOAPFaultException ex) {
                             logger.warn("Session timed out. " + ex.getMessage());

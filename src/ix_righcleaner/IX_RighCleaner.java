@@ -49,7 +49,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField movVer_dbServer,movVer_dbName, movVer_sourceFolder, movVer_dstFolder, remNodes_idField,remOwn_idField,iCatSqlField, iCatCatField, iCatDBNameField, iCatDBServerField, arch_dbServerField, arch_dbNameField, arch_dirField, arch_destDirField, updater_RightIdField, updater_DBServerField, updater_DBNameField,moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField movVer_ThreadCountField,movVer_PartitionField,movVer_dbServer,movVer_dbName, movVer_sourceFolder, movVer_dstFolder, remNodes_idField,remOwn_idField,iCatSqlField, iCatCatField, iCatDBNameField, iCatDBServerField, arch_dbServerField, arch_dbNameField, arch_dirField, arch_destDirField, updater_RightIdField, updater_DBServerField, updater_DBNameField,moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
@@ -71,6 +71,12 @@ public class IX_RighCleaner extends Application {
     }
     
     private boolean checkMoveVerkauf() {
+        if(movVer_ThreadCountField.getText() == null || movVer_ThreadCountField.getText().isEmpty()) {
+            return false;
+        }
+        if(movVer_PartitionField.getText() == null || movVer_PartitionField.getText().isEmpty()) {
+            return false;
+        }
         if(movVer_dbServer.getText() == null || movVer_dbServer.getText().isEmpty()) {
             return false;
         }
@@ -462,7 +468,8 @@ public class IX_RighCleaner extends Application {
                         tKeeper.addNewTask(remOwner_1);
                         break;
                     case "Move Verkauf":
-                        MoveVerkauf moveVerkauf_1 = new MoveVerkauf(logger, userField.getText(), passField.getText(), movVer_dbServer.getText(), movVer_dbName.getText(), Long.valueOf(movVer_sourceFolder.getText()), Long.valueOf(movVer_dstFolder.getText()), debugField.isSelected(), exportField.isSelected());
+                        MoveVerkauf moveVerkauf_1 = new MoveVerkauf(logger, userField.getText(), passField.getText(), movVer_dbServer.getText(), movVer_dbName.getText(), Long.valueOf(movVer_sourceFolder.getText())
+                                , Long.valueOf(movVer_dstFolder.getText()), Integer.valueOf(movVer_PartitionField.getText()), Integer.valueOf(movVer_ThreadCountField.getText()), debugField.isSelected(), exportField.isSelected());
                         tKeeper.addNewTask(moveVerkauf_1);
                         break;
                     default:
@@ -506,6 +513,8 @@ public class IX_RighCleaner extends Application {
                 movVer_dbName.clear();
                 movVer_sourceFolder.clear();
                 movVer_dstFolder.clear();
+                movVer_ThreadCountField.clear();
+                movVer_PartitionField.clear();
                 //appl_inherit;
             }
         });
@@ -632,7 +641,11 @@ public class IX_RighCleaner extends Application {
         movVer_dbName = new TextField();
         movVer_sourceFolder = new TextField();
         movVer_dstFolder = new TextField();
-                
+        movVer_ThreadCountField = new TextField();
+        movVer_PartitionField = new TextField();
+        movVer_ThreadCountField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
+        movVer_PartitionField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
+        
         updater_RightIdField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         
         moveRg_mandantField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -802,6 +815,10 @@ public class IX_RighCleaner extends Application {
         movVer_sourceFolderBox.setPadding(new Insets(5,5,5,5));
         HBox movVer_dstFolderBox = new HBox(10, new Label("Ziel Ordner ID"), movVer_dstFolder);
         movVer_dstFolderBox.setPadding(new Insets(5,5,5,5));
+        HBox movVer_ThreadCountBox = new HBox(10, new Label("Thread Count"), movVer_ThreadCountField);
+        HBox movVer_PartitionBox = new HBox(10, new Label("Partition Size"), movVer_PartitionField);
+        movVer_ThreadCountBox.setPadding(new Insets(5,5,5,5));
+        movVer_PartitionBox.setPadding(new Insets(5,5,5,5));
         
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
@@ -875,6 +892,8 @@ public class IX_RighCleaner extends Application {
         s.addNode(movVer_dbNameBox);
         s.addNode(movVer_sourceFolderBox);
         s.addNode(movVer_dstFolderBox);
+        s.addNode(movVer_ThreadCountBox);
+        s.addNode(movVer_PartitionBox);
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox, debugBox,runBox);
         tPane.getTabs().add(a);
         tPane.getTabs().add(b);

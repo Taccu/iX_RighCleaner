@@ -49,7 +49,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField movVer_ThreadCountField,movVer_PartitionField,movVer_dbServer,movVer_dbName, movVer_sourceFolder, movVer_dstFolder, remNodes_idField,remOwn_idField,iCatSqlField, iCatCatField, iCatDBNameField, iCatDBServerField, arch_dbServerField, arch_dbNameField, arch_dirField, arch_destDirField, updater_RightIdField, updater_DBServerField, updater_DBNameField,moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField movVer_dbServerField, movVer_dbNameField, movVer_ThreadCountField,movVer_PartitionField,movVer_dbServer,movVer_dbName, movVer_sourceFolder, movVer_dstFolder, remNodes_idField,remOwn_idField,iCatSqlField, iCatCatField, iCatDBNameField, iCatDBServerField, arch_dbServerField, arch_dbNameField, arch_dirField, arch_destDirField, updater_RightIdField, updater_DBServerField, updater_DBNameField,moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
@@ -113,6 +113,12 @@ public class IX_RighCleaner extends Application {
             return false;
         }
         if(moveRg_mandantField.getText() == null || moveRg_mandantField.getText().isEmpty()) {
+            return false;
+        }
+        if(movVer_dbServerField.getText() == null || movVer_dbServerField.getText().isEmpty()) {
+            return false;
+        }
+        if(movVer_dbNameField.getText() == null || movVer_dbNameField.getText().isEmpty()) {
             return false;
         }
         return moveRg_srcFoldField.getText() != null;
@@ -398,7 +404,7 @@ public class IX_RighCleaner extends Application {
                         if(!checkMoveRgTab()) {
                             return;
                         }
-                        MoveRechnungen move_1 = new MoveRechnungen(logger, userField.getText(), passField.getText(),Long.valueOf(moveRg_srcFoldField.getText()),Long.valueOf(moveRg_invoiceField.getText()),moveRg_inheritField.isSelected(),moveRg_categoriesField.isSelected(),moveRg_excludeCopyField.isSelected(),moveRg_clearClassField.isSelected(),Long.valueOf(moveRg_bpField.getText()), Long.valueOf(moveRg_mandantField.getText()), debugField.isSelected(), exportField.isSelected());
+                        MoveRechnungen move_1 = new MoveRechnungen(logger, userField.getText(), passField.getText(),Long.valueOf(moveRg_srcFoldField.getText()),Long.valueOf(moveRg_invoiceField.getText()),moveRg_inheritField.isSelected(),moveRg_categoriesField.isSelected(),moveRg_excludeCopyField.isSelected(),moveRg_clearClassField.isSelected(),Long.valueOf(moveRg_bpField.getText()), Long.valueOf(moveRg_mandantField.getText()), movVer_dbServerField.getText(), movVer_dbNameField.getText(), debugField.isSelected(), exportField.isSelected());
                         tKeeper.addNewTask(move_1);
                         break;
                     case "Search for Objects with Classification":
@@ -515,6 +521,8 @@ public class IX_RighCleaner extends Application {
                 movVer_dstFolder.clear();
                 movVer_ThreadCountField.clear();
                 movVer_PartitionField.clear();
+                movVer_dbServerField.clear();
+                movVer_dbNameField.clear();
                 //appl_inherit;
             }
         });
@@ -643,6 +651,11 @@ public class IX_RighCleaner extends Application {
         movVer_dstFolder = new TextField();
         movVer_ThreadCountField = new TextField();
         movVer_PartitionField = new TextField();
+        
+        
+        movVer_dbServerField = new TextField();
+        movVer_dbNameField = new TextField();
+        
         movVer_ThreadCountField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         movVer_PartitionField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         
@@ -820,6 +833,11 @@ public class IX_RighCleaner extends Application {
         movVer_ThreadCountBox.setPadding(new Insets(5,5,5,5));
         movVer_PartitionBox.setPadding(new Insets(5,5,5,5));
         
+        HBox movRG_dbServerBox  = new HBox(10, new Label("DB Server"), movVer_dbServerField);
+        movRG_dbServerBox.setPadding(new Insets(5,5,5,5));
+        HBox movRG_dbNameBox = new HBox(10, new Label("DB Name"), movVer_dbNameField);
+        movRG_dbNameBox.setPadding(new Insets(5,5,5,5));
+        
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
         Container c = new Container("Update with Item ID");
@@ -875,6 +893,8 @@ public class IX_RighCleaner extends Application {
         l.addNode(moveRg_categoriesBox);
         l.addNode(moveRg_excludeCopyBox);
         l.addNode(moveRg_clearClassBox);
+        l.addNode(movRG_dbServerBox);
+        l.addNode(movRG_dbNameBox);
         n.addNode(remNodes_idBox);
         o.addNode(arch_dbServerBox);
         o.addNode(arch_dbNameBox);

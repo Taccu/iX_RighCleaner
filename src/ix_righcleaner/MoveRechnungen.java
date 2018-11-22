@@ -5,13 +5,11 @@
  */
 package ix_righcleaner;
 
-import com.opentext.livelink.service.classifications.Classifications;
 import com.opentext.livelink.service.core.DataValue;
 import com.opentext.livelink.service.core.StringValue;
 import com.opentext.livelink.service.docman.AttributeGroup;
 import com.opentext.livelink.service.docman.AttributeSourceType;
 import com.opentext.livelink.service.docman.DocumentManagement;
-import com.opentext.livelink.service.docman.GetNodesInContainerOptions;
 import com.opentext.livelink.service.docman.Metadata;
 import com.opentext.livelink.service.docman.MoveOptions;
 import com.opentext.livelink.service.docman.Node;
@@ -66,7 +64,7 @@ public class MoveRechnungen extends ContentServerTask{
         logger.debug("Found " + nodes.size() + " Business Workspaces");
         newStream(nodes);
         nodes = null;
-        logger.debug("Gathered data from " + B_WORKSPACES.size());
+        logger.debug("Gathered data from " + B_WORKSPACES.size() + " Business Workspaces");
         //Alle Belege in dem Ordner
         oldMove(newGetNodes(sourceFolderId));
     }
@@ -112,7 +110,7 @@ public class MoveRechnungen extends ContentServerTask{
         nodes.stream()
                 .filter(node -> node.getType().equals("EcmWorkspace"))
                 .forEach(node -> {
-                    if(debug)logger.debug("Collecting data from " + node.getName() + "(id:" + node.getID());
+                    if(debug)logger.debug("Collecting data from " + node.getName() + "(id:" + node.getID() + ")");
                     //Create new AdvancedNode
                     DocumentManagement docManClient = getDocManClient();
                     AdvancedNode workspace = new AdvancedNode();
@@ -270,17 +268,23 @@ public class MoveRechnungen extends ContentServerTask{
     }
     //Findet den Accounting Ordner im BW
     private Node findAccounting( DocumentManagement docManClient, Node node) {
-        GetNodesInContainerOptions options = new GetNodesInContainerOptions();
-        options.setMaxDepth(1);
-        options.setMaxResults(Integer.MAX_VALUE);
-        List<Node> nodesInBP = docManClient.getNodesInContainer(node.getID(), options);
-        for(Node nodeInBP : nodesInBP) {
-            if(nodeInBP.isIsContainer() && nodeInBP.getName().equals("Accounting")) {
-                logger.debug(nodeInBP.getName() + "(id:"+ nodeInBP.getID() +") Ordner in " + node.getName() + "(id:"+node.getID() + ") gefunden");
-                return nodeInBP;
-            }
+        Long long1 = 0l;
+        try {
+        connectToDatabase(dbServer, dbName);
+        PreparedStatement ps = CONNECTION.prepareStatement("SELECT DataID\n" +
+                "FROM csadmin.DTree\n" +
+                "WHERE SubType = 0\n"
+                + "AND ParentID = ?\n"
+                + "AND Name = N'Accounting';");
+        ps.setLong(1,-node.getID());
+        ResultSet rs = ps.executeQuery();
+        while(rs.next()) {
+            long1 = rs.getLong("DataID");
         }
-        return null;
+        }catch(Exception ex)  {
+            handleError(ex);
+        }
+        return getDocManClient().getNode(long1);
     }
     // Verschiebt den Knoten "node" nach "destination"
     private void move(Node node, Node destination) {
@@ -289,7 +293,7 @@ public class MoveRechnungen extends ContentServerTask{
             //if(clearClassifcations) {
                // boolean unClassify = getClassifyClient().unClassify(node.getID());
                // if(!unClassify) {
-                    logger.error("Konnte die Klassifikation von Dokument " + node.getName() + "(id:" + node.getID() + ") nicht entfernen");
+                //    logger.error("Konnte die Klassifikation von Dokument " + node.getName() + "(id:" + node.getID() + ") nicht entfernen");
                 //}
                 //logger.info("Klassifikation von Dokument " + node.getName() + "(id:" + node.getID() + ") entfernt");
            // }

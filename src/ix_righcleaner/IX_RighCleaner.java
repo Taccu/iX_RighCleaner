@@ -49,7 +49,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField movVer_dbServerField, movVer_dbNameField, movVer_ThreadCountField,movVer_PartitionField,movVer_dbServer,movVer_dbName, movVer_sourceFolder, movVer_dstFolder, remNodes_idField,remOwn_idField,iCatSqlField, iCatCatField, iCatDBNameField, iCatDBServerField, arch_dbServerField, arch_dbNameField, arch_dirField, arch_destDirField, updater_RightIdField, updater_DBServerField, updater_DBNameField,moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField movVerToY_dbServer, movVerToY_dbName, movVerToY_sourceFolderId, movVerToY_destFolderId,movVerToY_partitionSize, movVerToY_parallelThreads, movVer_dbServerField, movVer_dbNameField, movVer_ThreadCountField,movVer_PartitionField,movVer_dbServer,movVer_dbName, movVer_sourceFolder, movVer_dstFolder, remNodes_idField,remOwn_idField,iCatSqlField, iCatCatField, iCatDBNameField, iCatDBServerField, arch_dbServerField, arch_dbNameField, arch_dirField, arch_destDirField, updater_RightIdField, updater_DBServerField, updater_DBNameField,moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
@@ -68,6 +68,26 @@ public class IX_RighCleaner extends Application {
             return false;
         }
         return groupField.getText() != null;
+    }
+    
+    private boolean checkMoveVerkaufToY() {
+        if(movVerToY_dbServer.getText() == null || movVerToY_dbServer.getText().isEmpty()) {
+            return false;
+        }
+        if(movVerToY_dbName.getText() == null || movVerToY_dbName.getText().isEmpty()) {
+            return false;
+        }  
+        if(movVerToY_sourceFolderId.getText() == null || movVerToY_sourceFolderId.getText().isEmpty()) {
+            return false;
+        }  
+        if(movVerToY_destFolderId.getText() == null || movVerToY_destFolderId.getText().isEmpty()) {
+            return false;
+        }  
+        if(movVerToY_partitionSize.getText() == null || movVerToY_partitionSize.getText().isEmpty()) {
+            return false;
+        }  
+        return !movVerToY_parallelThreads.getText().isEmpty();
+        
     }
     
     private boolean checkMoveVerkauf() {
@@ -478,6 +498,12 @@ public class IX_RighCleaner extends Application {
                                 , Long.valueOf(movVer_dstFolder.getText()), Integer.valueOf(movVer_PartitionField.getText()), Integer.valueOf(movVer_ThreadCountField.getText()), debugField.isSelected(), exportField.isSelected());
                         tKeeper.addNewTask(moveVerkauf_1);
                         break;
+                    case "Move Verkauf To Year":
+                        MoveVerkaufToYear moveVerkaufToYear_1 = new MoveVerkaufToYear(logger, userField.getText(), passField.getText(), 
+                                movVerToY_dbServer.getText(), movVerToY_dbName.getText(),Long.valueOf(movVerToY_sourceFolderId.getText()), Long.valueOf(movVerToY_destFolderId.getText()),
+                        Integer.valueOf(movVerToY_partitionSize.getText()), Integer.valueOf(movVerToY_parallelThreads.getText()),debugField.isSelected(), exportField.isSelected());
+                        tKeeper.addNewTask(moveVerkaufToYear_1);
+                        break;
                     default:
                         logger.error("Something went wrong");
                 }
@@ -523,6 +549,14 @@ public class IX_RighCleaner extends Application {
                 movVer_PartitionField.clear();
                 movVer_dbServerField.clear();
                 movVer_dbNameField.clear();
+                movVerToY_dbServer.clear();
+                movVerToY_dbName.clear();
+                movVerToY_sourceFolderId.clear();
+                movVerToY_destFolderId.clear();
+                movVerToY_partitionSize.clear();
+                movVerToY_parallelThreads.clear();
+                
+                
                 //appl_inherit;
             }
         });
@@ -655,6 +689,14 @@ public class IX_RighCleaner extends Application {
         
         movVer_dbServerField = new TextField();
         movVer_dbNameField = new TextField();
+        
+        movVerToY_dbServer = new TextField();
+        movVerToY_dbName = new TextField();
+        movVerToY_sourceFolderId = new TextField();
+        movVerToY_destFolderId = new TextField();
+        movVerToY_partitionSize = new TextField();
+        movVerToY_parallelThreads = new TextField();
+        
         
         movVer_ThreadCountField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         movVer_PartitionField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
@@ -837,7 +879,19 @@ public class IX_RighCleaner extends Application {
         movRG_dbServerBox.setPadding(new Insets(5,5,5,5));
         HBox movRG_dbNameBox = new HBox(10, new Label("DB Name"), movVer_dbNameField);
         movRG_dbNameBox.setPadding(new Insets(5,5,5,5));
-        
+               
+        HBox movVerToY_dbServerBox = new HBox(10, new Label("DB Server"), movVerToY_dbServer);
+        HBox movVerToY_dbNameBox = new HBox(10, new Label("DB Name"),movVerToY_dbName);
+        HBox movVerToY_sourceFolderIdBox = new HBox(10, new Label("Source Folder ID"), movVerToY_sourceFolderId);
+        HBox movVerToY_destFolderIdBox = new HBox(10, new Label("Dest Folder ID"), movVerToY_destFolderId); 
+        HBox movVerToY_partitionSizeBox = new HBox(10, new Label("Partition Size"), movVerToY_partitionSize);
+        HBox movVerToY_parallelThreadsBox = new HBox(10, new Label("Thread count"), movVerToY_parallelThreads);
+        movVerToY_dbServerBox.setPadding(new Insets(5,5,5,5));
+        movVerToY_dbNameBox.setPadding(new Insets(5,5,5,5));
+        movVerToY_sourceFolderIdBox.setPadding(new Insets(5,5,5,5));
+        movVerToY_destFolderIdBox.setPadding(new Insets(5,5,5,5));
+        movVerToY_partitionSizeBox.setPadding(new Insets(5,5,5,5));
+        movVerToY_parallelThreadsBox.setPadding(new Insets(5,5,5,5));
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
         Container c = new Container("Update with Item ID");
@@ -856,6 +910,7 @@ public class IX_RighCleaner extends Application {
         Container p = new Container("Infostore Cat");
         Container r = new Container("Remove Owner Permissions");
         Container s = new Container("Move Verkauf");
+        Container t = new Container("Move Verkauf To Year");
         a.addNode(partitionBox);
         a.addNode(sizeBox);
         a.addNode(up_dbServerBox);
@@ -914,6 +969,12 @@ public class IX_RighCleaner extends Application {
         s.addNode(movVer_dstFolderBox);
         s.addNode(movVer_ThreadCountBox);
         s.addNode(movVer_PartitionBox);
+        t.addNode(movVerToY_dbServerBox);
+        t.addNode(movVerToY_dbNameBox);
+        t.addNode(movVerToY_sourceFolderIdBox);
+        t.addNode(movVerToY_destFolderIdBox);
+        t.addNode(movVerToY_partitionSizeBox);
+        t.addNode(movVerToY_parallelThreadsBox);
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox, debugBox,runBox);
         tPane.getTabs().add(a);
         tPane.getTabs().add(b);
@@ -933,6 +994,7 @@ public class IX_RighCleaner extends Application {
         tPane.getTabs().add(p);
         tPane.getTabs().add(r);
         tPane.getTabs().add(s);
+        tPane.getTabs().add(t);
         SplitPane leftPane = new SplitPane(tPane,bottom);
         leftPane.setOrientation(Orientation.VERTICAL);
         SplitPane root = new SplitPane(leftPane,layout);

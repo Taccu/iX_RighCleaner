@@ -22,7 +22,6 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
 import static org.apache.commons.collections4.ListUtils.partition;
 
 /**
@@ -103,7 +102,7 @@ public class MoveVerkaufToYear extends ContentServerTask {
         if(elapsedTime < 1l) elapsedTime = 1l;
         if(partitionCount == 0 || received== 0) return 9999999.00;
         System.out.println(received + ":" + elapsedTime + ":" + partitionCount );
-        return 1.00*(partitionCount/(1.00*received/elapsedTime))/1000/60;
+        return 1.00*(partitionCount/((1.00*received)/elapsedTime))/60000;
     }
     class UpdateNodes implements Callable<List<Long>>{
         private final List<Long> partition;

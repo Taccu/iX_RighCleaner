@@ -49,7 +49,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author bho
  */
 public class IX_RighCleaner extends Application {
-    private TextField movVerToY_dbServer, movVerToY_dbName, movVerToY_sourceFolderId, movVerToY_destFolderId,movVerToY_partitionSize, movVerToY_parallelThreads, movVer_dbServerField, movVer_dbNameField, movVer_ThreadCountField,movVer_PartitionField,movVer_dbServer,movVer_dbName, movVer_sourceFolder, movVer_dstFolder, remNodes_idField,remOwn_idField,iCatSqlField, iCatCatField, iCatDBNameField, iCatDBServerField, arch_dbServerField, arch_dbNameField, arch_dirField, arch_destDirField, updater_RightIdField, updater_DBServerField, updater_DBNameField,moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
+    private TextField  remPe_dbServer, remPe_dbName, remPe_sql, remPe_group, movVerToY_dbServer, movVerToY_dbName, movVerToY_sourceFolderId, movVerToY_destFolderId,movVerToY_partitionSize, movVerToY_parallelThreads, movVer_dbServerField, movVer_dbNameField, movVer_ThreadCountField,movVer_PartitionField,movVer_dbServer,movVer_dbName, movVer_sourceFolder, movVer_dstFolder, remNodes_idField,remOwn_idField,iCatSqlField, iCatCatField, iCatDBNameField, iCatDBServerField, arch_dbServerField, arch_dbNameField, arch_dirField, arch_destDirField, updater_RightIdField, updater_DBServerField, updater_DBNameField,moveRg_mandantField, moveRg_srcFoldField,moveRg_bpField, moveRg_invoiceField,remCat_hasIdField, remCat_remIdField, remCat_fromIdField,xml_CatNameField, xml_folderField,cat_CatFromField, cat_IdField,class_IdField, class_ClassIdsField, obTemp_dbServerField, obTemp_dbNameField, obTemp_templateField, appl_nodeToCopyField,appl_folderIdsField,regionNameField,valueField,searchGroupField, folderField, userField,groupField, itemField, depthField, partitionField,dataIdField,folderPermField,catVersionField, catField;
     private PasswordField passField;
     private LogView logView;
     private Logger logger;
@@ -68,6 +68,19 @@ public class IX_RighCleaner extends Application {
             return false;
         }
         return groupField.getText() != null;
+    }
+    
+    private boolean checkRemPe() {
+        if(remPe_dbServer.getText() == null || remPe_dbServer.getText().isEmpty()) {
+            return false;
+        }
+        if(remPe_dbName.getText() == null || remPe_dbName.getText().isEmpty()) {
+            return false;
+        }
+        if(remPe_sql.getText() == null || remPe_sql.getText().isEmpty()) {
+            return false;
+        }
+        return !remPe_group.getText().isEmpty();
     }
     
     private boolean checkMoveVerkaufToY() {
@@ -504,6 +517,17 @@ public class IX_RighCleaner extends Application {
                         Integer.valueOf(movVerToY_partitionSize.getText()), Integer.valueOf(movVerToY_parallelThreads.getText()),debugField.isSelected(), exportField.isSelected());
                         tKeeper.addNewTask(moveVerkaufToYear_1);
                         break;
+                    case "Remove Permissions from Nodes":
+                        //Logger logger, String user, String password, String dbServer, String dbName, String sql, String group, boolean debug, boolean export
+                        if(!checkRemPe())
+                        {
+                            return;
+                        }
+                        RemovePermFromObj remPerm_1 = new RemovePermFromObj(logger, userField.getText(), passField.getText(),
+                            remPe_dbServer.getText(), remPe_dbName.getText(), remPe_sql.getText(), remPe_group.getText(),
+                                debugField.isSelected(), exportField.isSelected());
+                        tKeeper.addNewTask(remPerm_1);
+                        break;
                     default:
                         logger.error("Something went wrong");
                 }
@@ -555,8 +579,11 @@ public class IX_RighCleaner extends Application {
                 movVerToY_destFolderId.clear();
                 movVerToY_partitionSize.clear();
                 movVerToY_parallelThreads.clear();
-                
-                
+                //
+                remPe_dbServer.clear();
+                remPe_dbName.clear();
+                remPe_sql.clear();
+                remPe_group.clear();
                 //appl_inherit;
             }
         });
@@ -697,7 +724,11 @@ public class IX_RighCleaner extends Application {
         movVerToY_partitionSize = new TextField();
         movVerToY_parallelThreads = new TextField();
         
-        
+        //
+        remPe_dbServer = new TextField();
+        remPe_dbName = new TextField();
+        remPe_sql = new TextField();
+        remPe_group = new TextField();
         movVer_ThreadCountField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         movVer_PartitionField.setTextFormatter(new TextFormatter<>(new IntegerStringConverter()));
         
@@ -892,6 +923,17 @@ public class IX_RighCleaner extends Application {
         movVerToY_destFolderIdBox.setPadding(new Insets(5,5,5,5));
         movVerToY_partitionSizeBox.setPadding(new Insets(5,5,5,5));
         movVerToY_parallelThreadsBox.setPadding(new Insets(5,5,5,5));
+        
+        //remPe_dbServer, remPe_dbName, remPe_sql, remPe_group
+        HBox remPe_dbServerBox, remPe_dbNameBox, remPe_sqlBox, remPe_groupBox;
+        remPe_dbServerBox = new HBox(10, new Label("DB Server"), remPe_dbServer);
+        remPe_dbNameBox= new HBox(10, new Label("DB Name"), remPe_dbName);
+        remPe_sqlBox = new HBox(10, new Label("SQL"), remPe_sql);
+        remPe_groupBox= new HBox(10, new Label("Group to remove"), remPe_group);
+        remPe_dbServerBox.setPadding(new Insets(5,5,5,5));
+        remPe_dbNameBox.setPadding(new Insets(5,5,5,5));
+        remPe_sqlBox.setPadding(new Insets(5,5,5,5));
+        remPe_groupBox.setPadding(new Insets(5,5,5,5));
         Container a = new Container("Update Items with folder id");
         Container b = new Container("Update Permissions from folder");
         Container c = new Container("Update with Item ID");
@@ -911,6 +953,7 @@ public class IX_RighCleaner extends Application {
         Container r = new Container("Remove Owner Permissions");
         Container s = new Container("Move Verkauf");
         Container t = new Container("Move Verkauf To Year");
+        Container u = new Container("Remove Permissions from Nodes");
         a.addNode(partitionBox);
         a.addNode(sizeBox);
         a.addNode(up_dbServerBox);
@@ -975,6 +1018,10 @@ public class IX_RighCleaner extends Application {
         t.addNode(movVerToY_destFolderIdBox);
         t.addNode(movVerToY_partitionSizeBox);
         t.addNode(movVerToY_parallelThreadsBox);
+        u.addNode(remPe_dbServerBox);
+        u.addNode( remPe_dbNameBox);
+        u.addNode(remPe_sqlBox);
+        u.addNode(remPe_groupBox);
         VBox bottom = new VBox(userBox, passBox, groupBox ,exportBox, debugBox,runBox);
         tPane.getTabs().add(a);
         tPane.getTabs().add(b);
@@ -995,6 +1042,7 @@ public class IX_RighCleaner extends Application {
         tPane.getTabs().add(r);
         tPane.getTabs().add(s);
         tPane.getTabs().add(t);
+        tPane.getTabs().add(u);
         SplitPane leftPane = new SplitPane(tPane,bottom);
         leftPane.setOrientation(Orientation.VERTICAL);
         SplitPane root = new SplitPane(leftPane,layout);
